@@ -1,0 +1,2923 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chip Cha Iro: Lost In PawSafe</title>
+  <style>
+    :root {
+      color: #f8fbff;
+      background: #05070d;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: none;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255, 205, 93, 0.18), transparent 26%),
+        radial-gradient(circle at 18% 80%, rgba(73, 197, 255, 0.18), transparent 28%),
+        #05070d;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .game {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #03050a;
+    }
+
+    .game.shake {
+      animation: screenShake 0.32s linear;
+    }
+
+    .game.warning {
+      animation: warningFlash 0.24s steps(2, end) 3;
+    }
+
+    .low-power .game.shake,
+    .low-power .game.warning,
+    .low-power .prompt-panel,
+    .low-power .qte-button.valid,
+    .low-power .ready-flash,
+    .low-power .feedback {
+      animation: none !important;
+    }
+
+    .low-power .prompt-panel,
+    .low-power .qte-button.valid,
+    .low-power .ready-flash,
+    .low-power .feedback {
+      box-shadow: 0 0 10px rgba(255, 211, 110, 0.35) !important;
+    }
+
+    .scene-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background:
+        linear-gradient(135deg, rgba(17, 29, 54, 0.94), rgba(5, 8, 17, 0.96)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 12px);
+    }
+
+    .placeholder-scene {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 32%, rgba(255, 204, 93, 0.24), transparent 24%),
+        linear-gradient(145deg, #101a30, #070a12 58%, #020308);
+    }
+
+    .placeholder-scene h2 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 92px);
+      line-height: 0.95;
+      text-transform: uppercase;
+      text-shadow: 0 0 28px rgba(91, 207, 255, 0.42);
+    }
+
+    .placeholder-scene p {
+      max-width: 720px;
+      margin: 18px auto 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      z-index: 15;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #fff0ad;
+      font-size: clamp(24px, 4vw, 46px);
+      font-weight: 1000;
+      text-align: center;
+      text-transform: uppercase;
+      background: rgba(2, 4, 9, 0.54);
+      text-shadow: 0 0 26px rgba(255, 211, 110, 0.58);
+    }
+
+    .glass {
+      border: 1px solid rgba(140, 220, 255, 0.24);
+      background: linear-gradient(145deg, rgba(9, 19, 35, 0.84), rgba(4, 7, 14, 0.72));
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+    }
+
+    .screen {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at center, rgba(255, 206, 101, 0.14), transparent 30%),
+        rgba(2, 4, 9, 0.78);
+    }
+
+    #startScreen {
+      background:
+        radial-gradient(circle at 28% 18%, rgba(255, 244, 167, 0.94), transparent 17%),
+        radial-gradient(circle at 76% 24%, rgba(126, 225, 255, 0.42), transparent 22%),
+        linear-gradient(180deg, #7edcff 0%, #c9f8ff 30%, #bdf28b 31%, #4fb15a 100%);
+      overflow: hidden;
+    }
+
+    #startScreen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(5, 10, 22, 0.12), rgba(5, 10, 22, 0.38)),
+        radial-gradient(ellipse at 18% 88%, rgba(35, 119, 58, 0.88) 0 14%, transparent 15%),
+        radial-gradient(ellipse at 84% 90%, rgba(24, 105, 50, 0.82) 0 18%, transparent 19%),
+        linear-gradient(90deg, transparent 0 6%, rgba(105, 70, 35, 0.72) 6% 8%, transparent 8% 18%, rgba(99, 65, 33, 0.7) 18% 20%, transparent 20% 78%, rgba(99, 65, 33, 0.7) 78% 80%, transparent 80%),
+        radial-gradient(circle at 7% 48%, #3daa4a 0 7%, transparent 8%),
+        radial-gradient(circle at 19% 40%, #48bf56 0 9%, transparent 10%),
+        radial-gradient(circle at 79% 42%, #42b753 0 9%, transparent 10%),
+        radial-gradient(circle at 91% 50%, #348d44 0 7%, transparent 8%);
+      opacity: 0.95;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .title-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.96;
+      filter: saturate(1.08) brightness(0.94);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .start-card {
+      width: min(720px, calc(100vw - 34px));
+      border-radius: 18px;
+      padding: clamp(24px, 5vw, 46px);
+      text-align: center;
+    }
+
+    #startScreen .start-card {
+      position: relative;
+      width: min(760px, calc(100vw - 28px));
+      border: 3px solid rgba(255, 241, 155, 0.86);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(219, 249, 255, 0.54));
+      box-shadow: 0 18px 42px rgba(30, 111, 63, 0.32), 0 0 0 8px rgba(255, 255, 255, 0.18), 0 0 58px rgba(255, 215, 92, 0.28);
+      z-index: 2;
+    }
+
+    #startScreen .eyebrow {
+      color: #19774a;
+    }
+
+    #startScreen h1 {
+      color: #673817;
+      text-shadow: 0 3px 0 rgba(255, 255, 255, 0.72), 0 0 24px rgba(255, 205, 76, 0.62);
+    }
+
+    #startScreen .subtitle {
+      color: #165836;
+    }
+
+    .title-main,
+    .title-sub {
+      display: block;
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      color: #19774a;
+      font-size: 0.66em;
+    }
+
+    .controls-card {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .controls-card div {
+      border: 2px solid rgba(25, 119, 74, 0.2);
+      border-radius: 14px;
+      padding: 12px;
+      color: #153c2a;
+      background: rgba(255, 255, 255, 0.56);
+    }
+
+    .controls-card h2 {
+      margin: 0 0 8px;
+      color: #8d4c15;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .controls-card p {
+      margin: 4px 0;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .menu-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .popup-screen {
+      background: rgba(12, 69, 55, 0.4);
+      backdrop-filter: blur(8px);
+    }
+
+    .popup-card {
+      position: relative;
+      width: min(560px, calc(100vw - 32px));
+      border: 3px solid rgba(255, 241, 155, 0.92);
+      border-radius: 18px;
+      padding: 22px;
+      text-align: center;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(219, 249, 255, 0.9));
+      box-shadow: 0 20px 52px rgba(12, 78, 50, 0.36);
+    }
+
+    .popup-card h1 {
+      color: #673817;
+      font-size: clamp(32px, 7vw, 58px);
+      text-shadow: 0 3px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 1000;
+      background: #d95b35;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #ffd36e;
+      font-size: 0.76rem;
+      font-weight: 1000;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 7vw, 82px);
+      line-height: 0.94;
+    }
+
+    .subtitle {
+      max-width: 560px;
+      margin: 18px auto 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 1.02rem;
+      font-weight: 750;
+      line-height: 1.6;
+    }
+
+    .primary {
+      min-height: 54px;
+      margin-top: 26px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 30px;
+      color: #1a1105;
+      font-weight: 1000;
+      background: linear-gradient(135deg, #fff0ad, #d89128);
+      box-shadow: 0 0 34px rgba(255, 199, 89, 0.42);
+    }
+
+    .secondary {
+      min-height: 44px;
+      margin-top: 10px;
+      border: 1px solid rgba(140, 220, 255, 0.28);
+      border-radius: 999px;
+      padding: 0 20px;
+      color: #ecf9ff;
+      font-weight: 900;
+      background: rgba(5, 12, 24, 0.72);
+    }
+
+    .hud {
+      position: fixed;
+      z-index: 10;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-radius: 16px;
+      padding: 10px 12px;
+    }
+
+    .hud strong,
+    .hud span {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 12px;
+      font-weight: 950;
+    }
+
+    .hud strong {
+      color: #111721;
+      background: linear-gradient(135deg, #fff0ad, #7fe2ff);
+    }
+
+    .hud span {
+      border: 1px solid rgba(140, 220, 255, 0.18);
+      background: rgba(255, 255, 255, 0.065);
+    }
+
+    .stage-pill {
+      color: #1a1105;
+      background: linear-gradient(135deg, #fff0ad, #d89128) !important;
+      box-shadow: 0 0 18px rgba(255, 211, 110, 0.38);
+    }
+
+    .pause-button {
+      margin-left: auto;
+      border: 1px solid rgba(140, 220, 255, 0.24);
+      border-radius: 999px;
+      min-height: 36px;
+      padding: 0 16px;
+      color: #ecf9ff;
+      font-weight: 950;
+      background: rgba(5, 12, 24, 0.72);
+    }
+
+    .prompt-panel {
+      position: fixed;
+      z-index: 17;
+      left: 50%;
+      bottom: 104px;
+      width: min(560px, calc(100vw - 28px));
+      transform: translateX(-50%);
+      border: 2px solid rgba(255, 229, 130, 0.88);
+      border-radius: 16px;
+      padding: 10px 12px 12px;
+      text-align: center;
+      background:
+        linear-gradient(145deg, rgba(4, 10, 22, 0.66), rgba(2, 4, 10, 0.54));
+      box-shadow:
+        0 0 14px rgba(255, 218, 96, 0.62),
+        0 0 30px rgba(83, 217, 255, 0.34),
+        inset 0 0 22px rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(5px);
+      animation: promptBurst 0.16s ease-out, promptPulse 0.42s ease-in-out infinite alternate, promptFlash 0.34s steps(2, end) infinite;
+    }
+
+    .prompt-panel.force-visible {
+      display: block !important;
+    }
+
+    .prompt-panel.mobile-timer {
+      bottom: max(102px, calc(env(safe-area-inset-bottom) + 96px));
+      width: min(460px, calc(100vw - 32px));
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .prompt-panel.mobile-timer .prompt-title,
+    .prompt-panel.mobile-timer .prompt-help {
+      display: none;
+    }
+
+    .prompt-panel.mobile-timer .timer {
+      margin: 0;
+      height: 10px;
+      border: 2px solid rgba(255, 241, 129, 0.78);
+      box-shadow: 0 0 18px rgba(255, 220, 50, 0.45);
+    }
+
+    .prompt-title {
+      margin: 0;
+      color: #fff0ad;
+      font-size: clamp(24px, 5.6vw, 54px);
+      font-weight: 1000;
+      text-transform: uppercase;
+      line-height: 1;
+      text-shadow:
+        0 2px 0 #080b12,
+        0 0 16px rgba(255, 211, 110, 0.92),
+        0 0 28px rgba(91, 207, 255, 0.58);
+    }
+
+    .prompt-help {
+      display: none;
+    }
+
+    .timer {
+      height: 8px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .timer > span {
+      display: block;
+      height: 100%;
+      width: var(--time-left, 100%);
+      border-radius: inherit;
+      background: linear-gradient(90deg, #6ce4ff, #fff0ad, #ff8a3d);
+    }
+
+    .choice-row {
+      display: none;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .choice-row button {
+      min-width: 132px;
+      min-height: 54px;
+      border: 2px solid rgba(140, 220, 255, 0.62);
+      border-radius: 16px;
+      color: #f9fdff;
+      font-weight: 1000;
+      font-size: clamp(16px, 2.8vw, 28px);
+      text-transform: uppercase;
+      background: rgba(4, 10, 20, 0.84);
+      box-shadow: 0 0 22px rgba(91, 207, 255, 0.22);
+    }
+
+    .choice-row button.correct {
+      color: #1a1105;
+      border-color: transparent;
+      background: linear-gradient(135deg, #fff0ad, #d89128);
+      box-shadow: 0 0 28px rgba(255, 199, 89, 0.48);
+      transform: scale(1.08);
+    }
+
+    .choice-row button.active {
+      color: #1a1105;
+      border-color: transparent;
+      background: linear-gradient(135deg, #fff0ad, #d89128);
+    }
+
+    .mobile-pad {
+      position: fixed;
+      z-index: 18;
+      left: 14px;
+      right: 14px;
+      bottom: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      pointer-events: none;
+      transition: transform 0.18s ease, bottom 0.18s ease;
+    }
+
+    .qte-button {
+      min-width: min(23vw, 78px);
+      min-height: 42px;
+      border: 2px solid rgba(140, 220, 255, 0.2);
+      border-radius: 999px;
+      color: rgba(236, 249, 255, 0.42);
+      font-size: clamp(12px, 3.3vw, 18px);
+      font-weight: 1000;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(4, 10, 20, 0.72);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+      pointer-events: auto;
+      transform: scale(0.94);
+    }
+
+    .qte-button.valid {
+      color: #1a1105;
+      border-color: rgba(255, 239, 176, 0.98);
+      background: linear-gradient(135deg, #fff0ad, #d89128);
+      box-shadow: 0 0 22px rgba(255, 199, 89, 0.7), 0 0 44px rgba(91, 207, 255, 0.32);
+      animation: qteButtonPulse 0.42s ease-in-out infinite alternate;
+      transform: scale(1.08);
+    }
+
+    .mobile-pad.sudsy-mode .qte-button {
+      min-height: 56px;
+      border-radius: 14px;
+      border-color: #79e8ff;
+      color: #fff;
+      background: linear-gradient(180deg, #0dd7ff, #0059bd);
+      text-shadow: 0 2px 0 #002752;
+      box-shadow: 0 6px 0 #001a3a, 0 0 28px rgba(0, 195, 255, 0.48);
+      animation: promptIdle 0.9s ease-in-out infinite alternate;
+      transform: scale(1);
+      touch-action: manipulation;
+    }
+
+    .mobile-pad.sudsy-mode .qte-button.valid {
+      color: #fff;
+      border-color: #79e8ff;
+      background: linear-gradient(180deg, #0dd7ff, #0059bd);
+      text-shadow: 0 2px 0 #002752;
+      box-shadow: 0 6px 0 #001a3a, 0 0 28px rgba(0, 195, 255, 0.48);
+      animation: promptIdle 0.9s ease-in-out infinite alternate;
+      transform: scale(1);
+    }
+
+    .mobile-pad.sudsy-mode .qte-button.correct-hint {
+      border-color: #fff8a8;
+      color: #190b00;
+      background: linear-gradient(180deg, #fff176, #ff9f1c);
+      text-shadow: none;
+      box-shadow: 0 0 26px rgba(255, 220, 50, 0.9), 0 0 44px rgba(0, 195, 255, 0.55), 0 6px 0 #7a3b00;
+      animation: correctHint 0.2s ease-in-out 3 alternate !important;
+    }
+
+    .qte-button.invalid {
+      opacity: 0.2;
+    }
+
+    .qte-button.hidden-choice {
+      display: none;
+    }
+
+    .mobile-pad.active-qte {
+      pointer-events: auto;
+    }
+
+    .mobile-pad.stage-hard {
+      bottom: min(24vh, 172px);
+      transform: translate(var(--mobile-shift-x, 0), var(--mobile-shift-y, 0));
+    }
+
+    .qte-button.fakeout {
+      opacity: 0.72;
+      border-color: rgba(255, 69, 105, 0.72);
+      color: #fff;
+      background: rgba(130, 20, 42, 0.66);
+      animation: qteButtonPulse 0.18s ease-in-out 3 alternate;
+      transform: scale(0.98);
+    }
+
+    .qte-button.hit {
+      transform: scale(1.14);
+      filter: brightness(1.32);
+    }
+
+    @keyframes promptIdle {
+      from { filter: brightness(0.86); transform: translateY(0); }
+      to { filter: brightness(1.02); transform: translateY(-1px); }
+    }
+
+    @keyframes correctHint {
+      from { filter: brightness(1); transform: translateY(0) scale(1); }
+      to { filter: brightness(1.55); transform: translateY(-4px) scale(1.06); }
+    }
+
+    .feedback {
+      position: fixed;
+      z-index: 19;
+      left: 50%;
+      bottom: 178px;
+      transform: translateX(-50%);
+      padding: 8px 18px;
+      border: 2px solid rgba(255, 255, 255, 0.82);
+      border-radius: 14px;
+      color: #101722;
+      font-size: clamp(24px, 6vw, 60px);
+      font-weight: 1000;
+      line-height: 1;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #fff0ad, #7fe2ff);
+      box-shadow: 0 0 32px rgba(255, 240, 173, 0.8);
+      animation: feedbackPop 0.42s ease-out both;
+    }
+
+    .feedback.bad {
+      color: #fff;
+      background: linear-gradient(135deg, #ff405c, #8d101d);
+      box-shadow: 0 0 32px rgba(255, 64, 92, 0.8);
+    }
+
+    .ready-flash {
+      position: fixed;
+      z-index: 16;
+      left: 50%;
+      bottom: 164px;
+      transform: translateX(-50%);
+      padding: 8px 18px;
+      border: 2px solid rgba(255, 240, 173, 0.88);
+      border-radius: 999px;
+      color: #fff0ad;
+      font-size: clamp(20px, 5vw, 46px);
+      font-weight: 1000;
+      text-transform: uppercase;
+      background: rgba(5, 12, 24, 0.62);
+      box-shadow: 0 0 26px rgba(255, 211, 110, 0.66);
+      animation: readyFlash 0.55s ease-in-out infinite alternate;
+    }
+
+    .secret-trigger {
+      position: fixed;
+      z-index: 18;
+      right: clamp(18px, 7vw, 88px);
+      top: clamp(110px, 18vh, 190px);
+      width: 64px;
+      height: 64px;
+      border: 3px solid rgba(255, 241, 129, 0.94);
+      border-radius: 50%;
+      color: #fff5b7;
+      background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), rgba(255, 210, 68, 0.9) 38%, rgba(255, 115, 42, 0.2) 72%);
+      box-shadow: 0 0 18px rgba(255, 220, 50, 0.9), 0 0 46px rgba(91, 207, 255, 0.32);
+      font-size: 30px;
+      font-weight: 1000;
+      cursor: pointer;
+      animation: secretPulse 0.18s ease-in-out infinite alternate;
+      touch-action: manipulation;
+    }
+
+    .secret-trigger.paw {
+      border-color: rgba(126, 225, 255, 0.95);
+      background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), rgba(83, 211, 255, 0.9) 42%, rgba(13, 63, 168, 0.2) 75%);
+    }
+
+    .secret-trigger.treat {
+      border-color: rgba(255, 197, 71, 0.95);
+      background: radial-gradient(circle at 50% 35%, rgba(255, 250, 194, 0.96), rgba(209, 126, 38, 0.92) 44%, rgba(90, 44, 10, 0.24) 78%);
+    }
+
+    @keyframes secretPulse {
+      from { opacity: 0.75; transform: scale(0.92) rotate(-4deg); }
+      to { opacity: 1; transform: scale(1.13) rotate(4deg); }
+    }
+
+    .stage-screen {
+      position: fixed;
+      z-index: 21;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(255, 211, 110, 0.22), transparent 28%),
+        radial-gradient(circle at 22% 76%, rgba(77, 220, 255, 0.16), transparent 24%),
+        rgba(2, 5, 12, 0.86);
+    }
+
+    .stage-card {
+      width: min(680px, calc(100vw - 34px));
+      border: 2px solid rgba(255, 229, 130, 0.82);
+      border-radius: 18px;
+      padding: clamp(24px, 5vw, 44px);
+      background: linear-gradient(145deg, rgba(8, 18, 34, 0.9), rgba(3, 7, 15, 0.82));
+      box-shadow: 0 0 36px rgba(255, 211, 110, 0.28), 0 24px 64px rgba(0, 0, 0, 0.48);
+    }
+
+    .stage-card h2 {
+      margin: 0;
+      color: #fff0ad;
+      font-size: clamp(38px, 8vw, 86px);
+      line-height: 0.92;
+      text-transform: uppercase;
+      text-shadow: 0 0 28px rgba(255, 211, 110, 0.62);
+    }
+
+    .stage-card p {
+      margin: 14px auto 0;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .audio-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .audio-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      border: 1px solid rgba(140, 220, 255, 0.28);
+      border-radius: 999px;
+      padding: 0 14px;
+      color: #ecf9ff;
+      font-weight: 900;
+      background: rgba(5, 12, 24, 0.72);
+    }
+
+    .debug-panel {
+      display: none;
+    }
+
+    .debug-panel b {
+      color: #fff0ad;
+      font-weight: 1000;
+    }
+
+    .pad-cluster {
+      display: none;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .pad-cluster button,
+    .action-button {
+      border: 1px solid rgba(140, 220, 255, 0.25);
+      border-radius: 14px;
+      color: #ecf9ff;
+      font-weight: 1000;
+      background: rgba(4, 10, 20, 0.68);
+    }
+
+    .pad-up { grid-column: 2; grid-row: 1; }
+    .pad-left { grid-column: 1; grid-row: 2; }
+    .pad-right { grid-column: 3; grid-row: 2; }
+    .pad-down { grid-column: 2; grid-row: 3; }
+
+    .action-button {
+      width: 86px;
+      height: 86px;
+      align-self: end;
+      pointer-events: auto;
+      border-radius: 50%;
+    }
+
+    @keyframes promptBurst {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.72);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+    }
+
+    @keyframes promptPulse {
+      from {
+        transform: translateX(-50%) scale(0.99);
+      }
+      to {
+        transform: translateX(-50%) scale(1.035);
+      }
+    }
+
+    @keyframes promptFlash {
+      0%, 100% {
+        border-color: rgba(255, 229, 130, 0.96);
+      }
+      50% {
+        border-color: rgba(94, 229, 255, 0.96);
+      }
+    }
+
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-8px, 5px); }
+      40% { transform: translate(7px, -5px); }
+      60% { transform: translate(-5px, -4px); }
+      80% { transform: translate(5px, 3px); }
+    }
+
+    @keyframes warningFlash {
+      0%, 100% { box-shadow: inset 0 0 0 rgba(255, 30, 70, 0); }
+      50% { box-shadow: inset 0 0 140px rgba(255, 30, 70, 0.56); }
+    }
+
+    @keyframes qteButtonPulse {
+      from { transform: scale(0.98); }
+      to { transform: scale(1.08); }
+    }
+
+    @keyframes feedbackPop {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.6); }
+      20% { opacity: 1; transform: translateX(-50%) scale(1.12); }
+      100% { opacity: 0; transform: translateX(-50%) scale(1); }
+    }
+
+    @keyframes readyFlash {
+      from { opacity: 0.58; transform: translateX(-50%) scale(0.98); }
+      to { opacity: 1; transform: translateX(-50%) scale(1.05); }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      .controls-card {
+        grid-template-columns: 1fr;
+      }
+
+      .qte-button {
+        min-width: 29vw;
+        min-height: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" id="game">
+    <video class="scene-video" id="sceneVideo" playsinline preload="metadata"></video>
+    <audio id="titleTheme" src="assets/audio/title_theme.mp3" preload="auto" loop></audio>
+    <audio id="gameplayLoop" preload="auto" loop></audio>
+    <div class="placeholder-scene hidden" id="placeholderScene">
+      <div>
+        <p class="eyebrow">Video Notice</p>
+        <h2 id="placeholderTitle">Missing Video</h2>
+        <p id="placeholderCopy">Missing video: unknown video</p>
+      </div>
+    </div>
+    <div class="loading-overlay hidden" id="loadingOverlay">Loading PawSafe Forest...</div>
+
+    <header class="hud glass hidden" id="hud">
+      <strong>Lost In PawSafe</strong>
+      <span class="stage-pill">STAGE <b id="stageText">1/5</b></span>
+      <span>Score <b id="scoreText">0</b></span>
+      <span>Treats <b id="treatText">0</b></span>
+      <span>Lives <b id="livesText">3</b></span>
+      <span>Hearts <b id="heartText">0</b></span>
+      <span>Secret Treats <b id="secretTreatText">0</b></span>
+      <span>Side Quests <b id="sideQuestText">0</b></span>
+      <span>Combo <b id="comboText">0</b></span>
+      <span>Scene <b id="sceneText">Intro</b></span>
+      <button class="pause-button" id="pauseButton">Pause</button>
+    </header>
+
+    <section class="prompt-panel glass hidden" id="promptPanel">
+      <p class="prompt-title" id="promptTitle">Press Left!</p>
+      <p class="prompt-help" id="promptHelp">Keyboard: Arrow/WASD/Space. Mobile: tap the matching button.</p>
+      <div class="timer"><span id="timerFill"></span></div>
+      <div class="choice-row" id="choiceRow"></div>
+    </section>
+
+    <section class="mobile-pad hidden" id="mobilePad" aria-label="Mobile controls">
+      <button class="qte-button" data-input="left">Left</button>
+      <button class="qte-button" data-input="right">Right</button>
+      <button class="qte-button" data-input="sniff">Sniff</button>
+      <button class="qte-button" data-input="jump">Jump</button>
+      <button class="qte-button" data-input="bark">Bark</button>
+      <button class="qte-button" data-input="run">Run</button>
+    </section>
+
+    <div class="feedback hidden" id="feedbackText">MISS!</div>
+    <div class="ready-flash hidden" id="readyFlash">GET READY!</div>
+    <button class="secret-trigger hidden" id="secretTrigger" type="button" aria-label="Secret trigger">♥</button>
+
+    <section class="stage-screen hidden" id="stageScreen">
+      <div class="stage-card">
+        <p class="eyebrow" id="stageEyebrow">Stage 1/5</p>
+        <h2 id="stageTitle">Lost Trail</h2>
+        <p id="stageCopy">Easy timing. Learn the PawSafe commands.</p>
+      </div>
+    </section>
+
+    <aside class="debug-panel" id="debugPanel">
+      <div>Current scene: <b id="debugScene">Intro</b></div>
+      <div>Active prompt: <b id="debugPrompt">None</b></div>
+      <div>Valid inputs: <b id="debugInputs">None</b></div>
+      <div>Time left: <b id="debugTime">0.00s</b></div>
+    </aside>
+
+    <section class="screen" id="startScreen">
+      <video class="title-video" id="titleVideo" src="assets/video/chip_title_loop.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <div class="start-card glass">
+        <p class="eyebrow">Reh Dogg Games Plus FMV Arcade</p>
+        <h1><span class="title-main">Chip Cha Iro</span><span class="title-sub">Lost in PawSafe</span></h1>
+        <div class="menu-row">
+          <button class="primary" id="startButton">Start Game</button>
+          <button class="secondary" id="settingsButton">Settings</button>
+          <button class="secondary" id="howToPlayButton">How To Play</button>
+          <button class="secondary" id="startMuteButton">Mute</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen popup-screen hidden" id="instructionsScreen">
+      <div class="popup-card">
+        <button class="popup-close" id="instructionsCloseButton" aria-label="Close How To Play">X</button>
+        <p class="eyebrow">How To Play</p>
+        <h1>Quick Reactions</h1>
+        <div class="controls-card" aria-label="Instruction controls">
+          <div>
+            <h2>Keyboard</h2>
+            <p>LEFT = A / Arrow Left</p>
+            <p>RIGHT = D / Arrow Right</p>
+            <p>JUMP = Space</p>
+            <p>RUN = W</p>
+            <p>SNIFF = S</p>
+            <p>BARK = B</p>
+            <p>SECRET HEART = H</p>
+          </div>
+          <div>
+            <h2>Mobile</h2>
+            <p>LEFT</p>
+            <p>RIGHT</p>
+            <p>JUMP</p>
+            <p>RUN</p>
+            <p>SNIFF</p>
+            <p>BARK</p>
+            <p>TAP FLASHING HEART / TREAT / PAW</p>
+          </div>
+        </div>
+        <p class="subtitle">Secret symbols flash fast during the movie. Catch them to open optional side quests. Missing them does not hurt you.</p>
+        <button class="primary" id="instructionsContinueButton">Continue</button>
+      </div>
+    </section>
+
+    <section class="screen popup-screen hidden" id="settingsScreen">
+      <div class="popup-card">
+        <button class="popup-close" id="settingsCloseButton" aria-label="Close Settings">X</button>
+        <p class="eyebrow">Settings</p>
+        <h1>Audio</h1>
+        <p class="subtitle">Adjust title music, gameplay music, video audio, and arcade beeps.</p>
+        <button class="secondary" id="settingsMuteButton">Mute</button>
+        <div class="audio-controls">
+          <label for="settingsVolumeSlider">Volume <input id="settingsVolumeSlider" type="range" min="0" max="100" value="65"></label>
+        </div>
+        <div class="audio-controls">
+          <label for="difficultySelect">Difficulty
+            <select id="difficultySelect">
+              <option value="normal">Normal</option>
+              <option value="hard">Hard</option>
+              <option value="veryHard">Very Hard</option>
+            </select>
+          </label>
+        </div>
+        <button class="secondary" id="lowPowerButton">Low Power: Off</button>
+        <button class="primary" id="settingsContinueButton">Continue</button>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="pauseScreen">
+      <div class="start-card glass">
+        <p class="eyebrow">Paused</p>
+        <h1>Hold The Rescue</h1>
+        <p class="subtitle">Chip is waiting for your next move.</p>
+        <button class="primary" id="resumeButton">Resume</button>
+        <button class="secondary" id="restartFromPauseButton">Restart</button>
+        <button class="secondary" id="muteButton">Mute</button>
+        <div class="audio-controls">
+          <label for="volumeSlider">Volume <input id="volumeSlider" type="range" min="0" max="100" value="65"></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="gameOverScreen">
+      <div class="start-card glass">
+        <p class="eyebrow" id="endingLabel">Game Over</p>
+        <h1 id="endingTitle">Chip Got Caught!</h1>
+        <p class="subtitle" id="endingStats">Score 0 • Treats 0</p>
+        <button class="primary" id="restartButton">Play Again</button>
+        <button class="secondary" id="backToTitleButton">Return Home</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // TODO: Replace every placeholder file in assets/video/ with final VEO FMV scenes.
+    // PawSafe Forest scene flow:
+    // intro.mp4 -> forest_path.mp4 -> LEFT / RIGHT / SNIFF branching choice.
+    // LEFT uses left_success.mp4 or left_fail.mp4.
+    // RIGHT uses bridge_success.mp4 or bridge_fail.mp4.
+    // SNIFF finds sniff_secret.mp4 and opens the hidden route.
+    // Keep filenames lowercase and relative for GitHub Pages compatibility.
+    const systemVideos = {
+      choiceTimeoutFail: "assets/video/choice_timeout_fail.mp4",
+      retryScene: "assets/video/retry_scene.mp4",
+      pauseIdle: "assets/video/pause_idle.mp4",
+      victoryLoop: "assets/video/victory_loop.mp4"
+    };
+
+    const stages = [
+      {
+        title: "Lost Trail",
+        difficulty: "Easy",
+        copy: "Learn the PawSafe commands with slow, readable timing.",
+        bonus: 500,
+        timer: 3800,
+        mobileTimer: 3500,
+        steps: [
+          { scene: "forest_path", input: "left", mobilePool: ["left", "right", "sniff"] },
+          { scene: "left_path", input: "jump", mobileFakeouts: ["run"] }
+        ]
+      },
+      {
+        title: "Forest Confusion",
+        difficulty: "Tricky",
+        copy: "The forest keeps changing paths. Watch for fake safe routes.",
+        bonus: 800,
+        timer: 2900,
+        mobileTimer: 2750,
+        steps: [
+          { scene: "stage2_intro" },
+          { scene: "stage2_sniff_path", input: "sniff", fakeouts: ["right"], mobileFakeouts: ["left", "right"] },
+          { randomChoice: [
+            { scene: "stage2_wrong_path", input: "left", fakeouts: ["right"], mobileFakeouts: ["right", "sniff"] },
+            { scene: "golden_treat_found", input: "bark", mobileFakeouts: ["run"] }
+          ] },
+          { scene: "stage2_complete" }
+        ]
+      },
+      {
+        title: "Creek Run",
+        difficulty: "Fast",
+        copy: "River hazards and bridge trouble demand quicker reactions.",
+        bonus: 1100,
+        timer: 2300,
+        mobileTimer: 2000,
+        steps: [
+          { scene: "stage3_intro" },
+          { scene: "squirrel_chase", input: "left", ready: true, mobileFakeouts: ["right"] },
+          { scene: "creek_transition" },
+          { scene: "river_rock_jump", input: "jump", ready: true, mobileFakeouts: ["run"] },
+          { scene: "creek_transition_2" },
+          { scene: "run_from_water", input: "run", fakeouts: ["jump"], mobileFakeouts: ["jump", "left"] },
+          { scene: "stage3_complete" }
+        ]
+      },
+      {
+        title: "Night PawSafe",
+        difficulty: "Hard",
+        copy: "The forest gets dark. Owl warnings come back to back.",
+        bonus: 1500,
+        timer: 1700,
+        mobileTimer: 1500,
+        rapid: true,
+        steps: [
+          { scene: "stage4_intro" },
+          { scene: "bark_scare_success", input: "bark", fakeouts: ["run"], mobileFakeouts: ["run", "right"], lifePenalty: 2 },
+          { scene: "night_story_1" },
+          { scene: "owl_warning", input: "run", ready: true, fakeouts: ["bark"], mobileFakeouts: ["bark", "left"], lifePenalty: 2 },
+          { scene: "night_story_2" },
+          { scene: "night_wrong_turn", input: "right", ready: true, fakeouts: ["left"], mobileFakeouts: ["left", "sniff"], lifePenalty: 2 },
+          { scene: "stage4_complete" }
+        ]
+      },
+      {
+        title: "Home Sprint",
+        difficulty: "Final",
+        copy: "Final chase. Rapid commands decide whether Chip reaches home.",
+        bonus: 2200,
+        timer: 1200,
+        mobileTimer: 1000,
+        rapid: true,
+        steps: [
+          { scene: "stage5_intro" },
+          { scene: "squirrel_final_chase", input: "run", fakeouts: ["left", "right"], mobileFakeouts: ["left", "right", "jump"] },
+          { scene: "rapid_jump_success", input: "jump", fakeouts: ["run"], mobileFakeouts: ["run", "bark"] },
+          { scene: "squirrel_chase", input: "left", ready: false, fakeouts: ["right"], mobileFakeouts: ["right", "sniff"] },
+          { scene: "golden_treat_found", input: "bark", ready: false, fakeouts: ["run"], mobileFakeouts: ["run", "jump"] },
+          { scene: "final_run_home", input: "run", ready: false, mobileFakeouts: ["jump", "left", "right"] }
+        ]
+      }
+    ];
+
+    const getReadyActionScenes = new Set([
+      "river_rock_jump",
+      "bark_scare_success",
+      "squirrel_final_chase"
+    ]);
+
+    const difficultySettings = {
+      normal: { label: "Normal", timerScale: 1 },
+      hard: { label: "Hard", timerScale: 0.82 },
+      veryHard: { label: "Very Hard", timerScale: 0.68 }
+    };
+
+    const sideQuests = [
+      null,
+      {
+        id: "maggie_irene",
+        stage: 1,
+        trigger: "heart",
+        icon: "♥",
+        className: "heart",
+        clips: [
+          "assets/video/maggie_intro.mp4",
+          "assets/video/maggie_forest_help.mp4",
+          "assets/video/maggie_rescue_success.mp4",
+          "assets/video/maggie_bonus_complete.mp4"
+        ],
+        promptIndex: 1,
+        input: "bark",
+        reward: 900,
+        hearts: 1,
+        secretTreats: 4
+      },
+      {
+        id: "chip_golden_treat_trial",
+        stage: 2,
+        trigger: "treat",
+        icon: "◆",
+        className: "treat",
+        clips: [
+          "assets/video/chip_bonus_intro.mp4",
+          "assets/video/chip_treat_trial.mp4",
+          "assets/video/chip_quick_jump_bonus.mp4",
+          "assets/video/chip_bonus_complete.mp4"
+        ],
+        promptIndex: 1,
+        input: "jump",
+        reward: 650,
+        hearts: 0,
+        secretTreats: 5
+      },
+      {
+        id: "hidden_cave_challenge",
+        stage: 3,
+        trigger: "paw",
+        icon: "●",
+        className: "paw",
+        clips: [
+          "assets/video/cave_secret_intro.mp4",
+          "assets/video/cave_sniff_challenge.mp4",
+          "assets/video/cave_reward_complete.mp4"
+        ],
+        failClip: "assets/video/cave_wrong_turn_fail.mp4",
+        promptIndex: 1,
+        input: "sniff",
+        reward: 700,
+        hearts: 0,
+        secretTreats: 6
+      }
+    ];
+
+    /*
+      SCENE FLOW TABLE
+      sceneName | stage | type | requiredInput | successNext | failNext | timeoutNext | onEndNext | showGetReady
+      intro | pregame | intro | none | none | none | none | Stage 1 | false
+      forest_path | 1 | qte | LEFT | left_path | game_over if lives 0 else mud_trap_fail | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      left_path | 1 | qte | JUMP | Stage 1 complete | game_over if lives 0 else left_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      stage2_intro | 2 | intro | none | none | none | none | stage2_sniff_path | false
+      stage2_sniff_path | 2 | qte | SNIFF | sniff_path_success then stage2_complete | game_over if lives 0 else wrong_path_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      stage2_complete | 2 | complete | none | none | none | none | Stage 3 | false
+      stage3_intro | 3 | intro | none | none | none | none | squirrel_chase | false
+      squirrel_chase | 3 | qte | LEFT | creek_transition | game_over if lives 0 else mud_trap_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | true
+      creek_transition | 3 | story | none | none | none | none | river_rock_jump | false
+      river_rock_jump | 3 | qte | JUMP | creek_transition_2 | game_over if lives 0 else bridge_break_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | true
+      creek_transition_2 | 3 | story | none | none | none | none | run_from_water | false
+      run_from_water | 3 | qte | RUN | stage3_complete | game_over if lives 0 else bridge_break_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      stage3_complete | 3 | complete | none | none | none | none | Stage 4 | false
+      stage4_intro | 4 | intro | none | none | none | none | bark_scare_success | false
+      bark_scare_success | 4 | qte | BARK | night_story_1 | game_over if lives 0 else night_wrong_turn_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | true
+      night_story_1 | 4 | story | none | none | none | none | owl_warning | false
+      owl_warning | 4 | qte | RUN | night_story_2 | game_over if lives 0 else squirrel_chase/retry | game_over if lives 0 else choice_timeout_fail/retry | none | true
+      night_story_2 | 4 | story | none | none | none | none | night_wrong_turn | false
+      night_wrong_turn | 4 | qte | RIGHT | stage4_complete | game_over if lives 0 else night_wrong_turn_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      stage4_complete | 4 | complete | none | none | none | none | Stage 5 | false
+      stage5_intro | 5 | intro | none | none | none | none | squirrel_final_chase | false
+      squirrel_final_chase | 5 | qte | RUN | rapid_jump_success | game_over if lives 0 else night_wrong_turn_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | true
+      rapid_jump_success | 5 | qte | JUMP | squirrel_chase | game_over if lives 0 else bridge_break_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      squirrel_chase | 5 | qte | LEFT | golden_treat_found | game_over if lives 0 else mud_trap_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      golden_treat_found | 5 | qte | BARK | final_run_home | game_over if lives 0 else mud_trap_fail/retry | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      final_run_home | 5 | qte | RUN | goal_home only after final Stage 5 success | game_over | game_over if lives 0 else choice_timeout_fail/retry | none | false
+      goal_home | ending | victory | none | victory_loop | none | none | victory_loop only when gameState victory | false
+      victory_loop | ending | victory | none | none | none | none | Victory menu only | false
+      game_over | ending | gameover | none | none | none | none | Game Over menu only | false
+      maggie_intro | side quest 1 | story | none | none | none | maggie_forest_help | false
+      maggie_forest_help | side quest 1 | qte | BARK | maggie_rescue_success | maggie_bonus_complete | maggie_bonus_complete | none | false
+      maggie_rescue_success | side quest 1 | success | none | none | none | maggie_bonus_complete | false
+      maggie_bonus_complete | side quest 1 | complete | none | none | none | resume main stage | false
+      chip_bonus_intro | side quest 2 | story | none | none | none | chip_treat_trial | false
+      chip_treat_trial | side quest 2 | qte | JUMP | chip_quick_jump_bonus | chip_bonus_complete | chip_bonus_complete | none | false
+      chip_quick_jump_bonus | side quest 2 | success | none | none | none | chip_bonus_complete | false
+      chip_bonus_complete | side quest 2 | complete | none | none | none | resume main stage | false
+      cave_secret_intro | side quest 3 | story | none | none | none | cave_sniff_challenge | false
+      cave_sniff_challenge | side quest 3 | qte | SNIFF | cave_reward_complete | cave_wrong_turn_fail | cave_wrong_turn_fail | none | false
+      cave_wrong_turn_fail | side quest 3 | fail | none | none | none | resume main stage | false
+      cave_reward_complete | side quest 3 | complete | none | none | none | resume main stage | false
+
+      Legacy/non-stage scenes kept for compatibility:
+      bridge_path | legacy | qte | RIGHT | owl_warning | river_escape | choice_timeout_fail | none | false
+      sniff_secret | legacy | success | none | none | none | none | golden_treat_found | false
+      river_escape | legacy | qte | JUMP | owl_warning | mud_trap_fail | choice_timeout_fail | none | false
+      owl_warning | legacy | qte | RUN | golden_treat_found | squirrel_chase | choice_timeout_fail | none | false
+      golden_treat_found | legacy | qte | BARK | hidden_cave | mud_trap_fail | choice_timeout_fail | none | false
+      mud_trap_fail | legacy | fail | none | none | none | none | forest_path | false
+      squirrel_chase | legacy | qte | LEFT | hidden_cave | mud_trap_fail | choice_timeout_fail | none | false
+      hidden_cave | legacy | qte | SNIFF | goal_home | game_over | choice_timeout_fail | none | false
+      stage2_wrong_path | legacy | qte | LEFT | unused fallback | wrong_path_fail | choice_timeout_fail | none | false
+    */
+
+    /*
+      QTE AUDIT LIST
+      - Stage 1 Lost Trail: forest_path LEFT/RIGHT/SNIFF on mobile cycle, left_path JUMP, 3.8s desktop / 3.5s mobile.
+      - Stage 2 Forest Confusion: stage2_intro, stage2_sniff_path SNIFF, random fake safe route or golden treat BARK bonus, stage2_complete, 2.9s desktop / 2.75s mobile.
+      - Stage 3 Creek Run: stage3_intro, LEFT, creek transition, JUMP, bridge transition, RUN, stage3_complete, 2.3s desktop / 2.0s mobile.
+      - Stage 4 Night PawSafe: stage4_intro, BARK/story/RUN/story/RIGHT, stage4_complete, 1.7s desktop / 1.5s mobile, wrong input costs 2 lives.
+      - Stage 5 Home Sprint: stage5_intro, RUN/JUMP/LEFT/BARK chain, final_run_home RUN, then goal_home/victory_loop, 1.2s desktop / 1.0s mobile.
+      - Mobile Sudsy rules: mobile QTE buttons appear only during active prompts, later stages shift position, fake-out buttons are visible wrong taps, and Hard/Very Hard scale these timers lower.
+      - Combo rules: every 3 successful QTEs starts bonus scoring; a miss or timeout breaks the combo and removes extra score.
+      - forest_path: required input cycles LEFT / RIGHT / SNIFF; success video follows chosen route; fail video choice_timeout_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - left_path: required input JUMP; success video left_success.mp4; fail video left_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - bridge_path: required input RIGHT; success video bridge_success.mp4; fail video bridge_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - river_escape: required input JUMP; success video river_escape.mp4; fail video mud_trap_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - owl_warning: required input RUN; success video owl_warning.mp4; fail video squirrel_chase.mp4; timeout plays choice_timeout_fail.mp4.
+      - golden_treat_found: required input BARK; success video golden_treat_found.mp4; fail video mud_trap_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - squirrel_chase: required input LEFT; success video squirrel_chase.mp4; fail video mud_trap_fail.mp4; timeout plays choice_timeout_fail.mp4.
+      - hidden_cave: required input SNIFF; success video hidden_cave.mp4; fail video game_over.mp4; timeout plays choice_timeout_fail.mp4.
+    */
+
+    const scenes = {
+      // SCENE: Opening mascot intro. No prompt, then moves into the forest fork.
+      intro: {
+        id: "intro",
+        title: "Chip Mascot Intro",
+        video: "assets/video/intro.mp4",
+        placeholder: "Chip spots a glowing golden dog treat drifting between the trees of PawSafe Forest.",
+        prompt: null,
+        next: "forest_path"
+      },
+      // SCENE: Main choice prompt. LEFT, RIGHT, and SNIFF each branch to a different route.
+      forest_path: {
+        id: "forest_path",
+        title: "Glowing Forest Path",
+        video: "assets/video/forest_path.mp4",
+        placeholder: "The treat floats over a forked trail. Vines sway, fireflies glow, and Chip must choose fast.",
+        prompt: { label: "Follow the flashing trail!", pool: ["left", "right", "sniff"], time: 1600, at: 1300, ready: true },
+        routes: {
+          left: { next: "left_path", reward: 50, treats: 1 },
+          right: { next: "bridge_path", reward: 50, treats: 1 },
+          sniff: { next: "sniff_secret", reward: 200, treats: 2 }
+        },
+        failVideo: "assets/video/choice_timeout_fail.mp4",
+        fail: "mud_trap_fail",
+        penalty: 25,
+        consequence: "Too slow. Chip stumbles off the trail and slides into a muddy trap."
+      },
+      // SCENE: Left route challenge. Success reaches the river, failure costs a life and returns to the fork.
+      left_path: {
+        id: "left_path",
+        title: "Root Tunnel Dash",
+        video: "assets/video/left_success.mp4",
+        successVideo: "assets/video/left_success.mp4",
+        failVideo: "assets/video/left_fail.mp4",
+        placeholder: "Chip bolts left through a root tunnel while thorny branches snap shut behind him.",
+        prompt: { label: "Jump the root snare!", callout: "JUMP!", correct: "jump", choices: ["jump"], time: 1350, at: 1050 },
+        reward: 175,
+        treats: 2,
+        success: "river_escape",
+        fail: "forest_path",
+        penalty: 50,
+        consequence: "The root snare catches Chip and throws him back to the fork."
+      },
+      // SCENE: Right route bridge challenge. Success reaches the owl, failure falls into the river route.
+      bridge_path: {
+        id: "bridge_path",
+        title: "Creaky Bridge Crossing",
+        video: "assets/video/bridge_success.mp4",
+        successVideo: "assets/video/bridge_success.mp4",
+        failVideo: "assets/video/bridge_fail.mp4",
+        placeholder: "Chip races onto a rope bridge as the planks bend over a rushing stream.",
+        prompt: { label: "Keep balance!", callout: "RIGHT!", correct: "right", choices: ["right"], time: 1250, at: 1000 },
+        reward: 200,
+        treats: 2,
+        success: "owl_warning",
+        fail: "river_escape",
+        penalty: 75,
+        consequence: "A loose plank flips and drops Chip toward the river route."
+      },
+      // SCENE: Secret sniff route. Rewards extra treats and skips directly toward the golden treat.
+      sniff_secret: {
+        id: "sniff_secret",
+        title: "Secret Scent Trail",
+        video: "assets/video/sniff_secret.mp4",
+        placeholder: "Chip sniffs the air and discovers a hidden trail of paw-shaped sparkles.",
+        prompt: null,
+        reward: 250,
+        treats: 3,
+        next: "golden_treat_found"
+      },
+      // SCENE: River quick-time escape. Missing the log sends Chip into mud.
+      river_escape: {
+        id: "river_escape",
+        title: "River Escape",
+        video: "assets/video/river_escape.mp4",
+        successVideo: "assets/video/river_escape.mp4",
+        failVideo: "assets/video/mud_trap_fail.mp4",
+        placeholder: "The current pulls Chip toward slippery stones and a fallen log.",
+        prompt: { label: "Leap to the log!", callout: "JUMP!", correct: "jump", choices: ["jump"], time: 1200, at: 1200 },
+        reward: 225,
+        treats: 1,
+        success: "owl_warning",
+        fail: "mud_trap_fail",
+        penalty: 75,
+        consequence: "Chip misses the log and splashes into the mud bank."
+      },
+      // SCENE: Owl warning. Listening to the owl leads to the golden treat; missing it starts a chase.
+      owl_warning: {
+        id: "owl_warning",
+        title: "Owl Warning",
+        video: "assets/video/owl_warning.mp4",
+        successVideo: "assets/video/owl_warning.mp4",
+        failVideo: "assets/video/squirrel_chase.mp4",
+        placeholder: "A wise owl drops from the moonlit branches and warns Chip about the cave ahead.",
+        prompt: { label: "Duck under the owl's wing!", callout: "RUN!", correct: "run", choices: ["run"], time: 1300, at: 1000, ready: true },
+        reward: 175,
+        treats: 1,
+        success: "golden_treat_found",
+        fail: "squirrel_chase",
+        penalty: 50,
+        consequence: "Chip ignores the warning and startles the squirrels."
+      },
+      // SCENE: Reward beat. The golden treat points Chip toward the hidden cave.
+      golden_treat_found: {
+        id: "golden_treat_found",
+        title: "Golden Treat Found",
+        video: "assets/video/golden_treat_found.mp4",
+        successVideo: "assets/video/golden_treat_found.mp4",
+        failVideo: "assets/video/mud_trap_fail.mp4",
+        placeholder: "The glowing treat lands in moss, lighting the way to a hidden cave entrance.",
+        prompt: { label: "Call out to the forest!", callout: "BARK!", correct: "bark", choices: ["bark"], time: 1200, at: 1200 },
+        reward: 500,
+        treats: 5,
+        success: "hidden_cave",
+        fail: "mud_trap_fail",
+        penalty: 50,
+        consequence: "Chip stays quiet and the glowing trail fades into the mud."
+      },
+      // SCENE: Failure beat. Chip loses time in the mud and returns to the forest path if lives remain.
+      mud_trap_fail: {
+        id: "mud_trap_fail",
+        title: "Mud Trap",
+        video: "assets/video/mud_trap_fail.mp4",
+        placeholder: "Chip lands in sticky mud, shakes it off, and scrambles back toward the safe trail.",
+        prompt: null,
+        next: "forest_path"
+      },
+      // SCENE: Woodland creature danger. A clean left dodge reaches the cave.
+      squirrel_chase: {
+        id: "squirrel_chase",
+        title: "Squirrel Chase",
+        video: "assets/video/squirrel_chase.mp4",
+        successVideo: "assets/video/squirrel_chase.mp4",
+        failVideo: "assets/video/mud_trap_fail.mp4",
+        placeholder: "A wild line of woodland squirrels chases Chip around glowing mushrooms.",
+        prompt: { label: "Cut left around the stump!", callout: "LEFT!", correct: "left", choices: ["left"], time: 1100, at: 1200 },
+        reward: 225,
+        treats: 2,
+        success: "hidden_cave",
+        fail: "mud_trap_fail",
+        penalty: 75,
+        consequence: "The squirrels herd Chip straight into the muddy shortcut."
+      },
+      // SCENE: Final cave prompt. Sniff the correct paw mark or lose the trail.
+      hidden_cave: {
+        id: "hidden_cave",
+        title: "Hidden Cave",
+        video: "assets/video/hidden_cave.mp4",
+        successVideo: "assets/video/hidden_cave.mp4",
+        failVideo: "assets/video/game_over.mp4",
+        placeholder: "Inside the cave, paw symbols glow on ancient stone doors.",
+        prompt: { label: "Sniff the glowing paw mark!", callout: "SNIFF!", correct: "sniff", choices: ["sniff"], time: 1300, at: 1200 },
+        reward: 250,
+        treats: 3,
+        success: "goal_home",
+        fail: "game_over",
+        penalty: 100,
+        consequence: "The wrong cave door seals shut behind Chip."
+      },
+      stage2_intro: {
+        id: "stage2_intro",
+        title: "Stage 2: Forest Confusion",
+        video: "assets/video/stage2_intro.mp4",
+        placeholder: "Stage 2 begins. PawSafe Forest rearranges its trails and hides fake safe routes.",
+        prompt: null
+      },
+      stage2_sniff_path: {
+        id: "stage2_sniff_path",
+        title: "Scent Through The Confusion",
+        video: "assets/video/forest_path.mp4",
+        successVideo: "assets/video/sniff_path_success.mp4",
+        failVideo: "assets/video/wrong_path_fail.mp4",
+        placeholder: "The wrong trails glow for a second, but Chip can sniff the true path.",
+        prompt: { label: "Find the true scent!", callout: "SNIFF!", correct: "sniff", choices: ["sniff"], time: 3500, at: 1300, ready: true },
+        reward: 300,
+        treats: 2,
+        penalty: 100,
+        consequence: "Chip follows the wrong glow and the forest folds around him."
+      },
+      stage2_wrong_path: {
+        id: "stage2_wrong_path",
+        title: "Fake Safe Route",
+        video: "assets/video/sniff_path_success.mp4",
+        successVideo: "assets/video/sniff_path_success.mp4",
+        failVideo: "assets/video/wrong_path_fail.mp4",
+        placeholder: "A second fork flashes. One trail is safe, one trail is bait.",
+        prompt: { label: "Dodge the fake safe route!", callout: "LEFT!", correct: "left", choices: ["left"], time: 3500, at: 1200, ready: true },
+        reward: 325,
+        treats: 2,
+        penalty: 125,
+        consequence: "The fake route snaps shut behind Chip."
+      },
+      stage2_complete: {
+        id: "stage2_complete",
+        title: "Stage 2 Complete",
+        video: "assets/video/stage2_complete.mp4",
+        placeholder: "Chip escapes the confusing trails and finds the creek path.",
+        prompt: null
+      },
+      stage3_intro: {
+        id: "stage3_intro",
+        title: "Stage 3: Creek Run",
+        video: "assets/video/stage3_intro.mp4",
+        placeholder: "Stage 3 begins. The creek rushes through the forest, breaking paths apart.",
+        prompt: null
+      },
+      river_rock_jump: {
+        id: "river_rock_jump",
+        title: "River Rock Jump",
+        video: "assets/video/river_rock_jump.mp4",
+        successVideo: "assets/video/river_rock_jump.mp4",
+        failVideo: "assets/video/bridge_break_fail.mp4",
+        placeholder: "Chip races across wet stones as the creek rises.",
+        prompt: { label: "Jump the river rocks!", callout: "JUMP!", correct: "jump", choices: ["jump"], time: 2800, at: 1050, ready: true },
+        reward: 425,
+        treats: 2,
+        penalty: 150,
+        consequence: "Chip misses the rock and crashes into the breaking bridge route."
+      },
+      run_from_water: {
+        id: "run_from_water",
+        title: "Run From The Water",
+        video: "assets/video/run_from_water.mp4",
+        successVideo: "assets/video/run_from_water.mp4",
+        failVideo: "assets/video/bridge_break_fail.mp4",
+        placeholder: "The creek surges behind Chip and the bridge starts to crack.",
+        prompt: { label: "Outrun the water!", callout: "RUN!", correct: "run", choices: ["run"], time: 2800, at: 950, ready: true },
+        reward: 450,
+        treats: 2,
+        penalty: 175,
+        consequence: "The bridge breaks before Chip reaches the far bank."
+      },
+      creek_transition: {
+        id: "creek_transition",
+        title: "Creek Breather",
+        video: "assets/video/river_escape.mp4",
+        placeholder: "Chip catches the current and scrambles toward the next safe bank.",
+        prompt: null
+      },
+      creek_transition_2: {
+        id: "creek_transition_2",
+        title: "Bridge Breather",
+        video: "assets/video/bridge_success.mp4",
+        placeholder: "Chip regains balance before the creek rushes again.",
+        prompt: null
+      },
+      stage3_complete: {
+        id: "stage3_complete",
+        title: "Stage 3 Complete",
+        video: "assets/video/stage3_complete.mp4",
+        placeholder: "Chip clears the creek and reaches the darker side of PawSafe.",
+        prompt: null
+      },
+      stage4_intro: {
+        id: "stage4_intro",
+        title: "Stage 4: Night PawSafe",
+        video: "assets/video/squirrel_chase.mp4",
+        placeholder: "Stage 4 begins. Night falls, eyes glow in the trees, and reactions must be fast.",
+        prompt: null
+      },
+      bark_scare_success: {
+        id: "bark_scare_success",
+        title: "Bark Scare",
+        video: "assets/video/stage4_intro.mp4",
+        successVideo: "assets/video/bark_scare_success.mp4",
+        failVideo: "assets/video/night_wrong_turn_fail.mp4",
+        placeholder: "Something rustles in the dark. Chip must scare it off before it blocks the path.",
+        prompt: { label: "Scare it off!", callout: "BARK!", correct: "bark", choices: ["bark"], time: 2000, at: 850, ready: true },
+        reward: 525,
+        treats: 2,
+        penalty: 200,
+        consequence: "Chip panics and turns deeper into the night trail."
+      },
+      night_story_1: {
+        id: "night_story_1",
+        title: "Night Trail Shift",
+        video: "assets/video/hidden_cave.mp4",
+        placeholder: "The night trail opens into a darker hollow.",
+        prompt: null
+      },
+      night_story_2: {
+        id: "night_story_2",
+        title: "Owl Shadow",
+        video: "assets/video/stage4_intro.mp4",
+        placeholder: "The trees sway as the final night turn appears.",
+        prompt: null
+      },
+      night_wrong_turn: {
+        id: "night_wrong_turn",
+        title: "Night Wrong Turn",
+        video: "assets/video/owl_warning.mp4",
+        successVideo: "assets/video/owl_warning.mp4",
+        failVideo: "assets/video/night_wrong_turn_fail.mp4",
+        placeholder: "The moonlight splits into two paths. One turn leads home, one loops back into danger.",
+        prompt: { label: "Take the moonlit turn!", callout: "RIGHT!", correct: "right", choices: ["right"], time: 2000, at: 750, ready: true },
+        reward: 550,
+        treats: 2,
+        penalty: 225,
+        consequence: "Chip takes the wrong turn and the trees close in."
+      },
+      stage4_complete: {
+        id: "stage4_complete",
+        title: "Stage 4 Complete",
+        video: "assets/video/stage4_complete.mp4",
+        placeholder: "Chip survives Night PawSafe. The final sprint home begins.",
+        prompt: null
+      },
+      stage5_intro: {
+        id: "stage5_intro",
+        title: "Stage 5: Home Sprint",
+        video: "assets/video/stage5_intro.mp4",
+        placeholder: "Stage 5 begins. The final chase starts as Chip sees home lights through the trees.",
+        prompt: null
+      },
+      squirrel_final_chase: {
+        id: "squirrel_final_chase",
+        title: "Squirrel Final Chase",
+        video: "assets/video/squirrel_final_chase.mp4",
+        successVideo: "assets/video/squirrel_final_chase.mp4",
+        failVideo: "assets/video/night_wrong_turn_fail.mp4",
+        placeholder: "The woodland chase explodes behind Chip. He has to sprint without hesitation.",
+        prompt: { label: "Sprint from the chase!", callout: "RUN!", correct: "run", choices: ["run"], time: 1400, at: 650, ready: true },
+        reward: 700,
+        treats: 3,
+        penalty: 250,
+        consequence: "The chase catches Chip before he can break away."
+      },
+      rapid_jump_success: {
+        id: "rapid_jump_success",
+        title: "Rapid Jump",
+        video: "assets/video/rapid_jump_success.mp4",
+        successVideo: "assets/video/rapid_jump_success.mp4",
+        failVideo: "assets/video/bridge_break_fail.mp4",
+        placeholder: "A final broken log blocks the path home.",
+        prompt: { label: "Final jump!", callout: "JUMP!", correct: "jump", choices: ["jump"], time: 1400, at: 600, ready: true },
+        reward: 725,
+        treats: 3,
+        penalty: 275,
+        consequence: "Chip clips the log and tumbles back toward the chase."
+      },
+      final_run_home: {
+        id: "final_run_home",
+        title: "Final Run Home",
+        video: "assets/video/final_run_home.mp4",
+        successVideo: "assets/video/final_run_home.mp4",
+        failVideo: "assets/video/game_over.mp4",
+        placeholder: "The porch light shines ahead. One last burst brings Chip home.",
+        prompt: { label: "Run home!", callout: "RUN!", correct: "run", choices: ["run"], time: 1400, at: 700, ready: true },
+        reward: 1000,
+        treats: 5,
+        penalty: 300,
+        consequence: "Chip stumbles at the edge of home and the forest pulls him back."
+      },
+      // SCENE: Winning ending.
+      goal_home: {
+        id: "goal_home",
+        title: "Home Trail Found",
+        video: "assets/video/goal_home.mp4",
+        placeholder: "Chip follows the golden treat glow out of PawSafe Forest and sees home lights ahead.",
+        prompt: null,
+        reward: 1000,
+        treats: 5,
+        win: true
+      },
+      // SCENE: Losing ending.
+      game_over: {
+        id: "game_over",
+        title: "Lost In PawSafe",
+        video: "assets/video/game_over.mp4",
+        placeholder: "The forest shadows close in. Chip needs another rescue attempt.",
+        prompt: null,
+        lose: true
+      }
+    };
+
+    const state = {
+      current: "intro",
+      score: 0,
+      treats: 0,
+      lives: 3,
+      paused: false,
+      acceptingInput: false,
+      promptStartedAt: 0,
+      promptTimer: 0,
+      branchTimer: 0,
+      sceneTimer: 0,
+      readyTimer: 0,
+      pendingBranchDone: null,
+      pendingBranchSrc: "",
+      pendingSideQuest: null,
+      sideQuestClipIndex: 0,
+      sideQuestResume: null,
+      audioContext: null,
+      sceneToken: 0,
+      lastSceneKey: "",
+      muted: false,
+      volume: 0.65,
+      lowPower: false,
+      lastBeep: -1,
+      activePrompt: null,
+      activeRequiredInput: null,
+      timeLeft: 0,
+      promptCycle: 0,
+      awardedScenes: new Set(),
+      preloadVideo: null,
+      arcadeMode: true,
+      stageIndex: 0,
+      stageStepIndex: 0,
+      currentStageStep: null,
+      activeStageSteps: [],
+      stageCompleteTimer: 0,
+      hintTimer: 0,
+      secretTimer: 0,
+      stageStartedAt: 0,
+      gameState: "title",
+      difficulty: "normal",
+      combo: 0,
+      bestCombo: 0,
+      hearts: 0,
+      secretTreats: 0,
+      sideQuestsCompleted: 0,
+      sideQuestTriggeredStages: new Set(),
+      secretActive: null
+    };
+
+    const game = document.getElementById("game");
+    const video = document.getElementById("sceneVideo");
+    const titleVideo = document.getElementById("titleVideo");
+    const titleTheme = document.getElementById("titleTheme");
+    const gameplayLoop = document.getElementById("gameplayLoop");
+    const placeholder = document.getElementById("placeholderScene");
+    const placeholderTitle = document.getElementById("placeholderTitle");
+    const placeholderCopy = document.getElementById("placeholderCopy");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const hud = document.getElementById("hud");
+    const promptPanel = document.getElementById("promptPanel");
+    const promptTitle = document.getElementById("promptTitle");
+    const promptHelp = document.getElementById("promptHelp");
+    const timerFill = document.getElementById("timerFill");
+    const choiceRow = document.getElementById("choiceRow");
+    const mobilePad = document.getElementById("mobilePad");
+    const feedbackText = document.getElementById("feedbackText");
+    const readyFlash = document.getElementById("readyFlash");
+    const muteButton = document.getElementById("muteButton");
+    const startMuteButton = document.getElementById("startMuteButton");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const debugScene = document.getElementById("debugScene");
+    const debugPrompt = document.getElementById("debugPrompt");
+    const debugInputs = document.getElementById("debugInputs");
+    const debugTime = document.getElementById("debugTime");
+    const startScreen = document.getElementById("startScreen");
+    const instructionsScreen = document.getElementById("instructionsScreen");
+    const settingsScreen = document.getElementById("settingsScreen");
+    const pauseScreen = document.getElementById("pauseScreen");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const scoreText = document.getElementById("scoreText");
+    const treatText = document.getElementById("treatText");
+    const livesText = document.getElementById("livesText");
+    const heartText = document.getElementById("heartText");
+    const secretTreatText = document.getElementById("secretTreatText");
+    const sideQuestText = document.getElementById("sideQuestText");
+    const comboText = document.getElementById("comboText");
+    const sceneText = document.getElementById("sceneText");
+    const stageText = document.getElementById("stageText");
+    const stageScreen = document.getElementById("stageScreen");
+    const stageEyebrow = document.getElementById("stageEyebrow");
+    const stageTitle = document.getElementById("stageTitle");
+    const stageCopy = document.getElementById("stageCopy");
+    const secretTrigger = document.getElementById("secretTrigger");
+    const endingLabel = document.getElementById("endingLabel");
+    const endingTitle = document.getElementById("endingTitle");
+    const endingStats = document.getElementById("endingStats");
+    const difficultySelect = document.getElementById("difficultySelect");
+
+    function updateHud() {
+      scoreText.textContent = state.score;
+      treatText.textContent = state.treats;
+      livesText.textContent = state.lives;
+      heartText.textContent = state.hearts;
+      secretTreatText.textContent = state.secretTreats;
+      sideQuestText.textContent = state.sideQuestsCompleted;
+      comboText.textContent = state.combo;
+      stageText.textContent = `${Math.min(state.stageIndex + 1, stages.length)}/${stages.length}`;
+      sceneText.textContent = scenes[state.current]?.title || "Unknown";
+      updateDebug();
+    }
+
+    function show(el, visible) {
+      el.classList.toggle("hidden", !visible);
+    }
+
+    function clearGameplayTimers() {
+      clearTimeout(state.promptTimer);
+      clearTimeout(state.branchTimer);
+      clearTimeout(state.sceneTimer);
+      clearTimeout(state.readyTimer);
+      clearTimeout(state.hintTimer);
+      clearTimeout(state.secretTimer);
+      clearTimeout(state.stageCompleteTimer);
+      state.pendingBranchDone = null;
+      state.pendingBranchSrc = "";
+      state.acceptingInput = false;
+      state.activePrompt = null;
+      state.activeRequiredInput = null;
+      state.timeLeft = 0;
+      state.secretActive = null;
+      state.pendingSideQuest = null;
+      state.sideQuestResume = null;
+      promptPanel.classList.remove("force-visible");
+      promptPanel.classList.remove("mobile-timer");
+      show(promptPanel, false);
+      show(readyFlash, false);
+      show(secretTrigger, false);
+      resetMobileQteButtons();
+    }
+
+    function queueGameOverAfterFeedback() {
+      if (state.gameState === "victory") return;
+      state.gameState = "gameover";
+      clearTimeout(state.promptTimer);
+      clearTimeout(state.branchTimer);
+      clearTimeout(state.sceneTimer);
+      clearTimeout(state.readyTimer);
+      clearTimeout(state.secretTimer);
+      clearTimeout(state.stageCompleteTimer);
+      state.pendingBranchDone = null;
+      state.pendingBranchSrc = "";
+      state.acceptingInput = false;
+      state.activePrompt = null;
+      state.activeRequiredInput = null;
+      state.secretActive = null;
+      promptPanel.classList.remove("force-visible");
+      show(promptPanel, false);
+      show(readyFlash, false);
+      show(secretTrigger, false);
+      resetMobileQteButtons();
+      window.setTimeout(() => startGameOver(), 420);
+    }
+
+    function startGame() {
+      initArcadeAudio();
+      titleVideo.pause();
+      stopTitleTheme();
+      playGameplayLoop();
+      clearGameplayTimers();
+      state.gameState = "playing";
+      state.current = "intro";
+      state.score = 0;
+      state.treats = 0;
+      state.lives = 3;
+      state.combo = 0;
+      state.bestCombo = 0;
+      state.hearts = 0;
+      state.secretTreats = 0;
+      state.sideQuestsCompleted = 0;
+      state.sideQuestTriggeredStages = new Set();
+      state.secretActive = null;
+      state.pendingSideQuest = null;
+      state.sideQuestResume = null;
+      state.promptCycle = 0;
+      state.paused = false;
+      state.awardedScenes = new Set();
+      state.lastSceneKey = "";
+      state.stageIndex = 0;
+      state.stageStepIndex = 0;
+      state.currentStageStep = null;
+      state.activeStageSteps = [];
+      state.sceneToken += 1;
+      show(startScreen, false);
+      show(instructionsScreen, false);
+      show(settingsScreen, false);
+      show(stageScreen, false);
+      show(gameOverScreen, false);
+      show(hud, true);
+      show(mobilePad, false);
+      playScene(state.current);
+    }
+
+    function startStage(index) {
+      if (state.gameState === "gameover") return;
+      if (state.gameState === "victory" && index < stages.length) return;
+      state.stageIndex = index;
+      state.stageStepIndex = 0;
+      state.currentStageStep = null;
+      state.activeStageSteps = buildStageSteps(index);
+      clearTimeout(state.stageCompleteTimer);
+      if (index >= stages.length) {
+        state.gameState = "victory";
+        state.currentStageStep = null;
+        playScene("goal_home");
+        return;
+      }
+      show(stageScreen, false);
+      updateHud();
+      playCurrentStageStep();
+    }
+
+    function buildStageSteps(index) {
+      const stage = stages[index];
+      if (!stage) return [];
+      return stage.steps.map(step => {
+        if (!step.randomChoice?.length) return step;
+        const choiceIndex = Math.floor(Math.random() * step.randomChoice.length);
+        return step.randomChoice[choiceIndex];
+      });
+    }
+
+    function playCurrentStageStep() {
+      if (state.gameState !== "playing") return;
+      const step = currentStageStep();
+      if (!step) {
+        completeStage();
+        return;
+      }
+      state.currentStageStep = step;
+      state.lastSceneKey = "";
+      playScene(step.scene);
+    }
+
+    function completeStage() {
+      if (state.gameState !== "playing") return;
+      const stage = currentStage();
+      state.score += stage.bonus;
+      updateHud();
+      state.stageCompleteTimer = window.setTimeout(() => {
+        show(stageScreen, false);
+        startStage(state.stageIndex + 1);
+      }, 250);
+    }
+
+    function advanceStageFlow() {
+      if (state.gameState !== "playing") return;
+      state.stageStepIndex += 1;
+      state.currentStageStep = null;
+      if (state.stageStepIndex >= state.activeStageSteps.length) {
+        completeStage();
+      } else {
+        playCurrentStageStep();
+      }
+    }
+
+    function playScene(id) {
+      if (state.gameState === "gameover" && id !== "game_over") return;
+      if (state.gameState === "victory" && id === "game_over") return;
+      if (state.gameState !== "playing" && state.gameState !== "victory" && id !== "game_over") return;
+      const scene = scenes[id];
+      const sceneKey = `${id}:${scene.video}`;
+      if (state.lastSceneKey === sceneKey && !state.pendingBranchDone) {
+        console.warn(`Prevented accidental repeat: ${id}`);
+        return;
+      }
+      state.lastSceneKey = sceneKey;
+      const token = ++state.sceneToken;
+      state.current = id;
+      state.acceptingInput = false;
+      state.activePrompt = null;
+      state.activeRequiredInput = null;
+      state.timeLeft = 0;
+      clearTimeout(state.promptTimer);
+      clearTimeout(state.branchTimer);
+      clearTimeout(state.sceneTimer);
+      clearTimeout(state.readyTimer);
+      state.pendingBranchDone = null;
+      state.pendingBranchSrc = "";
+      promptPanel.classList.remove("force-visible");
+      show(promptPanel, false);
+      setValidQteButtons([]);
+      updateHud();
+
+      awardSceneBonus(scene);
+      loadVideo(scene.video, scene.title, scene.placeholder);
+      preloadNextVideo(scene);
+      scheduleSecretTrigger(scene, token);
+
+      const activePrompt = effectivePromptForScene(scene);
+      if (!activePrompt) return;
+
+      const promptDelay = activePrompt.at || 1100;
+      if (activePrompt.ready && !state.lowPower) {
+        const readyDelay = Math.max(0, promptDelay - 1000);
+        state.readyTimer = window.setTimeout(() => {
+          if (state.paused || state.current !== id || state.sceneToken !== token) return;
+          showReadyFlash();
+        }, readyDelay);
+      }
+      state.sceneTimer = window.setTimeout(() => {
+        if (state.paused || state.current !== id || state.sceneToken !== token) return;
+        if (!state.lowPower) {
+          playArcadeSound("warning");
+          warningFlash();
+        }
+        state.sceneTimer = window.setTimeout(() => {
+          if (state.paused || state.current !== id || state.sceneToken !== token) return;
+          showPrompt(scene, activePrompt);
+        }, 220);
+      }, promptDelay);
+    }
+
+    function awardSceneBonus(scene) {
+      if ((!scene.reward && !scene.treats) || scene.prompt || state.awardedScenes.has(scene.id)) return;
+      state.score += scene.reward || 0;
+      state.treats += scene.treats || 0;
+      state.awardedScenes.add(scene.id);
+      updateHud();
+    }
+
+    function scheduleSecretTrigger(scene, token) {
+      clearTimeout(state.secretTimer);
+      show(secretTrigger, false);
+      state.secretActive = null;
+      if (state.gameState !== "playing" || state.pendingSideQuest || state.currentStageStep?.scene !== scene.id) return;
+      if (state.sideQuestTriggeredStages.has(state.stageIndex)) return;
+      const quest = sideQuests.find(item => item?.stage === state.stageIndex + 1);
+      if (!quest) return;
+      state.secretTimer = window.setTimeout(() => {
+        if (state.gameState !== "playing" || state.paused || state.sceneToken !== token || state.current !== scene.id) return;
+        showSecretTrigger(quest);
+      }, 520);
+    }
+
+    function showSecretTrigger(quest) {
+      state.secretActive = quest;
+      secretTrigger.textContent = quest.icon;
+      secretTrigger.className = `secret-trigger ${quest.className || ""}`;
+      show(secretTrigger, true);
+      clearTimeout(state.secretTimer);
+      state.secretTimer = window.setTimeout(() => {
+        state.secretActive = null;
+        show(secretTrigger, false);
+      }, 650);
+    }
+
+    function triggerSecretQuest() {
+      const quest = state.secretActive;
+      if (!quest || state.pendingSideQuest || state.gameState !== "playing") return;
+      state.secretActive = null;
+      show(secretTrigger, false);
+      clearTimeout(state.secretTimer);
+      state.sideQuestTriggeredStages.add(state.stageIndex);
+      startSideQuest(quest);
+    }
+
+    function startSideQuest(quest) {
+      state.pendingSideQuest = quest;
+      state.sideQuestClipIndex = 0;
+      state.sideQuestResume = {
+        stageIndex: state.stageIndex,
+        stageStepIndex: state.stageStepIndex,
+        currentStageStep: state.currentStageStep
+      };
+      clearTimeout(state.promptTimer);
+      clearTimeout(state.sceneTimer);
+      clearTimeout(state.readyTimer);
+      clearTimeout(state.hintTimer);
+      state.acceptingInput = false;
+      state.activePrompt = null;
+      state.activeRequiredInput = null;
+      show(promptPanel, false);
+      show(readyFlash, false);
+      resetMobileQteButtons();
+      playSideQuestClip();
+    }
+
+    function playSideQuestClip() {
+      const quest = state.pendingSideQuest;
+      if (!quest || state.gameState !== "playing") return;
+      const src = quest.clips[state.sideQuestClipIndex];
+      state.current = quest.id;
+      state.sceneToken += 1;
+      loadVideo(src, "", "");
+      const isPromptClip = state.sideQuestClipIndex === quest.promptIndex;
+      if (isPromptClip) {
+        const prompt = {
+          correct: quest.input,
+          requiredInput: quest.input,
+          choices: [quest.input],
+          fakeouts: sideQuestFakeouts(quest.input),
+          time: currentSideQuestTimer(),
+          at: 700,
+          ready: false
+        };
+        clearTimeout(state.sceneTimer);
+        state.sceneTimer = window.setTimeout(() => {
+          if (state.pendingSideQuest === quest && state.gameState === "playing") showPrompt({ id: quest.id, prompt }, prompt);
+        }, prompt.at);
+      }
+    }
+
+    function currentSideQuestTimer() {
+      const stage = currentStage();
+      const base = isMobileQteMode() ? stage.mobileTimer : stage.timer;
+      const difficulty = difficultySettings[state.difficulty] || difficultySettings.normal;
+      return Math.max(isMobileQteMode() ? 430 : 650, Math.round(base * difficulty.timerScale * 0.72));
+    }
+
+    function sideQuestFakeouts(input) {
+      return ["left", "right", "run", "jump", "sniff", "bark"].filter(value => value !== input).slice(0, 2);
+    }
+
+    function finishSideQuest(success) {
+      const quest = state.pendingSideQuest;
+      if (!quest) return;
+      if (success) {
+        state.score += quest.reward || 0;
+        state.hearts += quest.hearts || 0;
+        state.secretTreats += quest.secretTreats || 0;
+        state.sideQuestsCompleted += 1;
+      }
+      updateHud();
+      state.pendingSideQuest = null;
+      state.sideQuestClipIndex = 0;
+      state.current = state.sideQuestResume?.currentStageStep?.scene || state.current;
+      state.currentStageStep = state.sideQuestResume?.currentStageStep || state.currentStageStep;
+      state.sideQuestResume = null;
+      playCurrentStageStep();
+    }
+
+    function currentStage() {
+      return stages[state.stageIndex] || stages[stages.length - 1];
+    }
+
+    function currentStageStep() {
+      return state.activeStageSteps[state.stageStepIndex] || currentStage()?.steps[state.stageStepIndex] || null;
+    }
+
+    function inputForStageStep(step) {
+      if (!step) return null;
+      if (isMobileQteMode() && step.mobilePool?.length) {
+        const index = state.promptCycle % step.mobilePool.length;
+        state.promptCycle += 1;
+        return step.mobilePool[index];
+      }
+      if (isMobileQteMode() && step.mobileInput) return step.mobileInput;
+      return step.input || null;
+    }
+
+    function effectivePromptForScene(scene) {
+      if (!scene.prompt) return null;
+      const step = state.currentStageStep;
+      const stage = currentStage();
+      const mobile = isMobileQteMode();
+      const baseTime = mobile ? stage.mobileTimer : stage.timer;
+      const difficulty = difficultySettings[state.difficulty] || difficultySettings.normal;
+      const mobileMultiplier = mobile ? (state.stageIndex >= 4 ? 0.46 : state.stageIndex >= 3 ? 0.52 : 0.65) : 1;
+      const minTime = mobile ? (state.stageIndex >= 4 ? 430 : state.stageIndex >= 3 ? 500 : 620) : 650;
+      const time = Math.max(minTime, Math.round(baseTime * difficulty.timerScale * mobileMultiplier));
+      const rapidOffset = stage.rapid ? 300 : 0;
+      const stepInput = inputForStageStep(step);
+      const fakeouts = mobile && step?.mobileFakeouts ? step.mobileFakeouts : (step?.fakeouts || []);
+      return {
+        ...scene.prompt,
+        correct: stepInput || scene.prompt.correct,
+        requiredInput: stepInput || scene.prompt.requiredInput,
+        pool: stepInput ? null : scene.prompt.pool,
+        choices: [stepInput || scene.prompt.correct || scene.prompt.choices?.[0] || "left"],
+        fakeouts,
+        time,
+        at: Math.max(500, (scene.prompt.at || 1100) - rapidOffset),
+        ready: step?.ready === true || (step?.ready !== false && getReadyActionScenes.has(scene.id))
+      };
+    }
+
+    function isMobileQteMode() {
+      return matchMedia("(pointer: coarse)").matches || window.innerWidth <= 760;
+    }
+
+    function applyMobileQteChallenge(requiredInput, fakeouts) {
+      const mobile = isMobileQteMode();
+      show(mobilePad, true);
+      mobilePad.classList.add("active-qte");
+      mobilePad.classList.toggle("sudsy-mode", mobile);
+      mobilePad.classList.toggle("stage-hard", state.stageIndex >= 2);
+      const shiftScale = state.stageIndex >= 4 ? 26 : state.stageIndex >= 3 ? 22 : 16;
+      const xShift = state.stageIndex >= 2 ? `${(((state.stageIndex + state.stageStepIndex) % 3) - 1) * shiftScale}vw` : "0";
+      const yShift = state.stageIndex >= 3 ? `${state.stageStepIndex % 2 === 0 ? -14 : -6}vh` : "0";
+      mobilePad.style.setProperty("--mobile-shift-x", xShift);
+      mobilePad.style.setProperty("--mobile-shift-y", yShift);
+      document.querySelectorAll(".qte-button").forEach(button => {
+        const isRequired = button.dataset.input === requiredInput;
+        const isFakeout = fakeouts.includes(button.dataset.input) && state.stageIndex >= 1;
+        button.classList.toggle("hidden-choice", mobile ? false : (!isRequired && !isFakeout));
+        button.classList.toggle("fakeout", !mobile && isFakeout);
+        button.disabled = false;
+      });
+      if (mobile) flashCorrectMobileHint(requiredInput);
+    }
+
+    function flashCorrectMobileHint(requiredInput) {
+      clearTimeout(state.hintTimer);
+      const correctButton = [...document.querySelectorAll(".qte-button")].find(button => button.dataset.input === requiredInput);
+      if (!correctButton) return;
+      correctButton.classList.add("correct-hint");
+      const prompt = state.activePrompt || {};
+      const cap = state.stageIndex >= 3 ? 230 : 360;
+      const ratio = state.stageIndex >= 3 ? 0.2 : 0.28;
+      const hintDuration = Math.min(cap, (prompt.time || 1000) * ratio);
+      state.hintTimer = window.setTimeout(() => {
+        correctButton.classList.remove("correct-hint");
+      }, hintDuration);
+    }
+
+    function showPrompt(scene, promptOverride) {
+      state.acceptingInput = true;
+      show(readyFlash, false);
+      const prompt = promptOverride || scene.prompt;
+      const requiredInput = chooseRequiredInput(prompt);
+      state.activeRequiredInput = requiredInput;
+      state.activePrompt = { ...prompt, requiredInput, choices: [requiredInput] };
+      state.promptStartedAt = performance.now();
+      state.lastBeep = -1;
+      promptTitle.textContent = `${labelFor(requiredInput).toUpperCase()}!`;
+      promptHelp.textContent = "";
+      timerFill.style.setProperty("--time-left", "100%");
+      choiceRow.innerHTML = "";
+      setValidQteButtons([requiredInput]);
+      applyMobileQteChallenge(requiredInput, state.activePrompt.fakeouts || []);
+      promptPanel.classList.add("force-visible");
+      promptPanel.classList.toggle("mobile-timer", isMobileQteMode());
+      show(promptPanel, true);
+      tickPrompt(scene);
+    }
+
+    function tickPrompt(scene) {
+      const elapsed = performance.now() - state.promptStartedAt;
+      const prompt = state.activePrompt || scene.prompt;
+      const remaining = Math.max(0, prompt.time - elapsed);
+      state.timeLeft = remaining;
+      timerFill.style.setProperty("--time-left", `${(remaining / prompt.time) * 100}%`);
+      updateDebug();
+      const beepSlot = Math.ceil(remaining / 350);
+      if (beepSlot !== state.lastBeep) {
+        state.lastBeep = beepSlot;
+        playArcadeSound("tick");
+      }
+      if (remaining <= 0) {
+        resolvePrompt(scene, false, null, "timeout");
+        return;
+      }
+      state.promptTimer = window.setTimeout(() => tickPrompt(scene), 30);
+    }
+
+    function handleInput(input) {
+      if (state.gameState !== "playing") return;
+      if (!state.acceptingInput || state.paused) return;
+      const scene = scenes[state.current];
+      if (!scene?.prompt) return;
+      const success = input === state.activeRequiredInput;
+      resolvePrompt(scene, success, input, "input");
+    }
+
+    function resolvePrompt(scene, success, input, reason = "input") {
+      state.acceptingInput = false;
+      state.activePrompt = null;
+      const requiredInput = state.activeRequiredInput;
+      state.activeRequiredInput = null;
+      state.timeLeft = 0;
+      clearTimeout(state.promptTimer);
+      clearTimeout(state.hintTimer);
+      promptPanel.classList.remove("force-visible");
+      promptPanel.classList.remove("mobile-timer");
+      show(promptPanel, false);
+      show(readyFlash, false);
+      setValidQteButtons([]);
+      resetMobileQteButtons();
+      [...choiceRow.querySelectorAll("button")].forEach(button => {
+        button.classList.toggle("active", button.dataset.input === input);
+      });
+
+      if (state.pendingSideQuest) {
+        resolveSideQuestPrompt(success, reason);
+        return;
+      }
+
+      if (state.arcadeMode && state.currentStageStep) {
+        resolveStagePrompt(scene, success, reason);
+        return;
+      }
+
+      if (scene.routes) {
+        const route = scene.routes[requiredInput];
+        if (success && route) {
+          playArcadeSound("success");
+          state.score += route.reward || 0;
+          state.treats += route.treats || 0;
+          updateHud();
+          playScene(route.next);
+          return;
+        }
+      }
+
+      if (success) {
+        playArcadeSound("success");
+        state.score += scene.reward || 0;
+        state.treats += scene.treats || 0;
+        updateHud();
+        playBranchVideo(scene.successVideo, "", () => playScene(scene.success), { seamless: true });
+      } else {
+        showFeedback(reason === "timeout" ? "TOO SLOW!" : "MISS!", false);
+        playArcadeSound("fail");
+        shakeScreen();
+        state.lives -= 1;
+        state.score = Math.max(0, state.score - (scene.penalty || 0));
+        updateHud();
+        if (state.lives <= 0) {
+          queueGameOverAfterFeedback();
+          return;
+        }
+        const isTimeout = reason === "timeout";
+        const failVideo = isTimeout ? systemVideos.choiceTimeoutFail : scene.failVideo;
+        const failCopy = isTimeout
+          ? "Too slow."
+          : scene.consequence || "Missed input.";
+        playBranchVideo(failVideo, failCopy, () => {
+          if (scene.fail === "game_over") {
+            if (scene.fail === "game_over" && failVideo === scenes.game_over.video) {
+              showEndMenu(false);
+            } else {
+              startGameOver();
+            }
+          } else {
+            playBranchVideo(systemVideos.retryScene, "Retry scene. Chip shakes it off and gets ready to try again.", () => playScene(scene.fail));
+          }
+        });
+      }
+    }
+
+    function resolveStagePrompt(scene, success, reason) {
+      if (success) {
+        playArcadeSound("success");
+        state.combo += 1;
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
+        const comboBonus = state.combo >= 3 ? 75 + (state.combo - 3) * 25 : 0;
+        state.score += (scene.reward || 125) + comboBonus;
+        state.treats += scene.treats || 1;
+        updateHud();
+        const successVideo = scene.successVideo || scene.video;
+        if (successVideo && successVideo !== scene.video) {
+          playBranchVideo(successVideo, "", advanceStageFlow, { seamless: true });
+        } else {
+          state.pendingBranchDone = advanceStageFlow;
+          state.pendingBranchSrc = video.currentSrc || video.src || scene.video;
+          state.branchTimer = window.setTimeout(() => finishPendingBranch(state.pendingBranchSrc), 12000);
+        }
+        return;
+      }
+
+      showFeedback(reason === "timeout" ? "TOO SLOW!" : "MISS!", false);
+      playArcadeSound("fail");
+      shakeScreen();
+      const step = state.currentStageStep || {};
+      const brokenComboPenalty = state.combo >= 3 ? 250 : 0;
+      state.combo = 0;
+      state.lives -= step.lifePenalty || 1;
+      state.score = Math.max(0, state.score - (scene.penalty || 100) - brokenComboPenalty);
+      updateHud();
+      if (state.lives <= 0) {
+        queueGameOverAfterFeedback();
+        return;
+      }
+      const failVideo = reason === "timeout" ? systemVideos.choiceTimeoutFail : (scene.failVideo || systemVideos.choiceTimeoutFail);
+      playBranchVideo(failVideo, "Missed input.", () => {
+        playBranchVideo(systemVideos.retryScene, "", playCurrentStageStep, { seamless: true });
+      });
+    }
+
+    function resolveSideQuestPrompt(success, reason) {
+      const quest = state.pendingSideQuest;
+      if (!quest) return;
+      if (success) {
+        playArcadeSound("success");
+        state.sideQuestClipIndex += 1;
+        playSideQuestClip();
+        return;
+      }
+      showFeedback(reason === "timeout" ? "TOO SLOW!" : "MISS!", false);
+      playArcadeSound("fail");
+      shakeScreen();
+      const failClip = quest.failClip || quest.clips[quest.clips.length - 1];
+      loadVideo(failClip, "", "");
+      state.pendingBranchDone = () => finishSideQuest(false);
+      state.pendingBranchSrc = failClip;
+      state.branchTimer = window.setTimeout(() => finishPendingBranch(failClip), 12000);
+    }
+
+    function playBranchVideo(src, copy, done, options = {}) {
+      if (state.gameState === "gameover") return;
+      if (state.gameState === "victory" && src !== systemVideos.victoryLoop) return;
+      const title = options.seamless ? "" : "PawSafe Scene";
+      const fallback = options.seamless ? "" : (copy || "Video loading.");
+      loadVideo(src || "", title, fallback);
+      state.pendingBranchDone = done;
+      state.pendingBranchSrc = src || "";
+      state.branchTimer = window.setTimeout(() => finishPendingBranch(src || ""), 12000);
+    }
+
+    function finishPendingBranch(src) {
+      if (state.gameState === "gameover") return;
+      if (!state.pendingBranchDone) return;
+      if (src && state.pendingBranchSrc && src !== state.pendingBranchSrc) return;
+      const done = state.pendingBranchDone;
+      state.pendingBranchDone = null;
+      state.pendingBranchSrc = "";
+      clearTimeout(state.branchTimer);
+      done();
+    }
+
+    function finishCurrentSideQuestClip() {
+      const quest = state.pendingSideQuest;
+      if (!quest) return;
+      if (state.sideQuestClipIndex === quest.promptIndex && state.acceptingInput) {
+        resolvePrompt({ id: quest.id, prompt: state.activePrompt }, false, null, "timeout");
+        return;
+      }
+      if (state.sideQuestClipIndex >= quest.clips.length - 1) {
+        finishSideQuest(true);
+        return;
+      }
+      state.sideQuestClipIndex += 1;
+      playSideQuestClip();
+    }
+
+    function startGameOver() {
+      if (state.gameState === "victory") return;
+      state.gameState = "gameover";
+      clearGameplayTimers();
+      state.sceneToken += 1;
+      state.current = "game_over";
+      show(hud, false);
+      show(stageScreen, false);
+      show(gameOverScreen, false);
+      loadVideo(scenes.game_over.video, scenes.game_over.title, scenes.game_over.placeholder);
+    }
+
+    function showEndMenu(won) {
+      state.gameState = won ? "victory" : "gameover";
+      show(hud, false);
+      show(mobilePad, false);
+      show(promptPanel, false);
+      show(stageScreen, false);
+      show(gameOverScreen, true);
+      endingLabel.textContent = won ? "Rescue Complete" : "Game Over";
+      endingTitle.textContent = won ? "Chip Reached Home!" : "Chip Got Caught!";
+      const rank = rankForScore(state.score, state.treats, state.lives, won);
+      endingStats.textContent = `Treats ${state.treats} | Score ${state.score} | Best Combo ${state.bestCombo} | Rank ${rank}`;
+    }
+
+    function rankForScore(score, treats, lives, won) {
+      if (!won) return "C";
+      const total = score + treats * 40 + lives * 250;
+      if (total >= 9000) return "S";
+      if (total >= 6500) return "A";
+      if (total >= 4200) return "B";
+      return "C";
+    }
+
+    function initArcadeAudio() {
+      if (!state.audioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) state.audioContext = new AudioCtx();
+      }
+      if (state.audioContext?.state === "suspended") {
+        state.audioContext.resume();
+      }
+      playTitleTheme();
+    }
+
+    function playOptionalAudio(audio, label) {
+      if (!audio) return;
+      audio.volume = Math.min(1, state.volume * 0.55);
+      audio.muted = state.muted;
+      audio.play().catch(() => console.warn(`${label} unavailable or blocked until interaction.`));
+    }
+
+    function playTitleTheme() {
+      if (state.lowPower) return;
+      playOptionalAudio(titleTheme, "title_theme.mp3");
+    }
+
+    function stopTitleTheme() {
+      titleTheme.pause();
+      titleTheme.currentTime = 0;
+    }
+
+    function playGameplayLoop() {
+      if (state.lowPower) return;
+      if (!gameplayLoop.getAttribute("src")) {
+        console.warn("gameplay_loop.mp3 unavailable; continuing with video audio only.");
+        return;
+      }
+      gameplayLoop.volume = Math.min(1, state.volume * 0.28);
+      gameplayLoop.muted = state.muted;
+      gameplayLoop.play().catch(() => console.warn("gameplay_loop.mp3 unavailable or blocked."));
+    }
+
+    function playArcadeSound(type) {
+      const ctx = state.audioContext;
+      if (!ctx) return;
+      if (state.muted || state.volume <= 0) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const settings = {
+        warning: { start: 320, end: 760, duration: 0.18, volume: 0.08 },
+        tick: { start: 980, end: 720, duration: 0.045, volume: 0.045 },
+        success: { start: 720, end: 1180, duration: 0.16, volume: 0.07 },
+        fail: { start: 190, end: 90, duration: 0.2, volume: 0.09 }
+      }[type] || { start: 600, end: 600, duration: 0.08, volume: 0.05 };
+      osc.type = type === "fail" ? "sawtooth" : "square";
+      osc.frequency.setValueAtTime(settings.start, now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(40, settings.end), now + settings.duration);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(settings.volume * state.volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + settings.duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + settings.duration + 0.02);
+    }
+
+    function shakeScreen() {
+      game.classList.remove("shake");
+      void game.offsetWidth;
+      game.classList.add("shake");
+      window.setTimeout(() => game.classList.remove("shake"), 340);
+    }
+
+    function warningFlash() {
+      game.classList.remove("warning");
+      void game.offsetWidth;
+      game.classList.add("warning");
+      window.setTimeout(() => game.classList.remove("warning"), 760);
+    }
+
+    function showFeedback(text, good) {
+      feedbackText.textContent = text;
+      feedbackText.classList.toggle("bad", !good);
+      show(feedbackText, true);
+      void feedbackText.offsetWidth;
+      window.setTimeout(() => show(feedbackText, false), 420);
+    }
+
+    function showReadyFlash() {
+      readyFlash.textContent = "GET READY!";
+      show(readyFlash, true);
+      window.setTimeout(() => show(readyFlash, false), 850);
+    }
+
+    function togglePause(force) {
+      state.paused = typeof force === "boolean" ? force : !state.paused;
+      show(pauseScreen, state.paused);
+      preloadVideo(systemVideos.pauseIdle);
+      if (state.paused) {
+        video.pause();
+        gameplayLoop.volume = Math.min(1, state.volume * 0.12);
+      } else {
+        gameplayLoop.volume = Math.min(1, state.volume * 0.28);
+        video.play().catch(() => queuePlaybackRetry(video.currentSrc || video.src));
+      }
+    }
+
+    function updateAudioControls() {
+      video.muted = state.muted;
+      video.volume = state.volume;
+      titleTheme.muted = state.muted;
+      gameplayLoop.muted = state.muted;
+      titleTheme.volume = Math.min(1, state.volume * 0.55);
+      gameplayLoop.volume = Math.min(1, state.volume * 0.28);
+      if (state.lowPower) {
+        titleTheme.pause();
+        gameplayLoop.pause();
+      }
+      muteButton.textContent = state.muted ? "Unmute" : "Mute";
+      startMuteButton.textContent = state.muted ? "Unmute" : "Mute";
+      document.getElementById("settingsMuteButton").textContent = state.muted ? "Unmute" : "Mute";
+      document.getElementById("lowPowerButton").textContent = state.lowPower ? "Low Power: On" : "Low Power: Off";
+      difficultySelect.value = state.difficulty;
+      volumeSlider.value = Math.round(state.volume * 100);
+      document.getElementById("settingsVolumeSlider").value = Math.round(state.volume * 100);
+    }
+
+    function toggleLowPower() {
+      state.lowPower = !state.lowPower;
+      document.body.classList.toggle("low-power", state.lowPower);
+      if (state.lowPower) {
+        titleTheme.pause();
+        gameplayLoop.pause();
+        if (state.preloadVideo) state.preloadVideo.src = "";
+      } else if (!startScreen.classList.contains("hidden") || !instructionsScreen.classList.contains("hidden") || !settingsScreen.classList.contains("hidden")) {
+        playTitleTheme();
+      }
+      updateAudioControls();
+    }
+
+    function toggleMute() {
+      state.muted = !state.muted;
+      updateAudioControls();
+    }
+
+    function playTitleVideo() {
+      if (!titleVideo) return;
+      titleVideo.muted = true;
+      titleVideo.play().catch(() => console.warn("chip_title_loop.mp4 autoplay is waiting for interaction."));
+    }
+
+    function fileName(src) {
+      return (src || "").split("/").pop() || "unknown video";
+    }
+
+    function loadVideo(src, title, fallbackCopy) {
+      if (!src) {
+        showMissingVideo(src);
+        return;
+      }
+      show(loadingOverlay, true);
+      loadingOverlay.textContent = "Loading PawSafe Forest...";
+      show(placeholder, false);
+      video.src = src;
+      video.currentTime = 0;
+      video.preload = state.lowPower ? "metadata" : "auto";
+      updateAudioControls();
+      video.load();
+      video.play().then(() => {
+        show(placeholder, false);
+      }).catch(() => {
+        show(loadingOverlay, false);
+        queuePlaybackRetry(src);
+      });
+    }
+
+    function queuePlaybackRetry(src) {
+      console.warn(`Video playback waiting for tap: ${fileName(src)}`);
+      loadingOverlay.textContent = "Tap to continue";
+      show(loadingOverlay, true);
+      const retry = () => {
+        document.removeEventListener("pointerdown", retry);
+        loadingOverlay.textContent = "Loading PawSafe Forest...";
+        video.play().then(() => {
+          show(loadingOverlay, false);
+          show(placeholder, false);
+        }).catch(() => {
+          show(loadingOverlay, false);
+          showMissingVideo(src);
+        });
+      };
+      document.addEventListener("pointerdown", retry, { once: true });
+    }
+
+    function showMissingVideo(src) {
+      show(loadingOverlay, false);
+      show(placeholder, true);
+      placeholderTitle.textContent = "Missing Video";
+      placeholderCopy.textContent = `Missing video: ${fileName(src)}`;
+      console.warn(`Missing video: ${fileName(src)}`);
+    }
+
+    function scenePrimaryVideo(id) {
+      return scenes[id]?.video || "";
+    }
+
+    function preloadVideo(src) {
+      if (!src || state.lowPower) return;
+      state.preloadVideo = document.createElement("video");
+      state.preloadVideo.preload = "auto";
+      state.preloadVideo.src = src;
+      state.preloadVideo.load();
+    }
+
+    function preloadNextVideo(scene) {
+      const nextSources = [];
+      if (scene.next) nextSources.push(scenePrimaryVideo(scene.next));
+      if (scene.success) nextSources.push(scenePrimaryVideo(scene.success));
+      if (scene.fail) nextSources.push(scenePrimaryVideo(scene.fail));
+      if (scene.win) nextSources.push(systemVideos.victoryLoop);
+      if (scene.lose) nextSources.push(systemVideos.retryScene);
+      if (scene.routes) {
+        Object.values(scene.routes).forEach(route => nextSources.push(scenePrimaryVideo(route.next)));
+      }
+      preloadVideo(nextSources.find(Boolean));
+    }
+
+    function setValidQteButtons(validInputs) {
+      const validSet = new Set(validInputs);
+      const mobile = isMobileQteMode();
+      document.querySelectorAll(".qte-button").forEach(button => {
+        const isValid = validSet.has(button.dataset.input);
+        button.classList.toggle("valid", !mobile && isValid);
+        button.classList.toggle("invalid", !mobile && validInputs.length > 0 && !isValid);
+      });
+      if (validInputs.length === 0) resetMobileQteButtons();
+      updateDebug();
+    }
+
+    function resetMobileQteButtons() {
+      clearTimeout(state.hintTimer);
+      mobilePad.classList.remove("active-qte", "stage-hard", "sudsy-mode");
+      mobilePad.style.setProperty("--mobile-shift-x", "0");
+      mobilePad.style.setProperty("--mobile-shift-y", "0");
+      document.querySelectorAll(".qte-button").forEach(button => {
+        button.classList.remove("valid", "invalid", "fakeout", "hidden-choice", "correct-hint");
+        button.disabled = false;
+      });
+      show(mobilePad, false);
+    }
+
+    function chooseRequiredInput(prompt) {
+      if (prompt.requiredInput) return prompt.requiredInput;
+      if (prompt.correct) return prompt.correct;
+      if (prompt.pool?.length) {
+        const selected = prompt.pool[state.promptCycle % prompt.pool.length];
+        state.promptCycle += 1;
+        return selected;
+      }
+      return prompt.choices?.[0] || "left";
+    }
+
+    function updateDebug() {
+      const scene = scenes[state.current];
+      const active = state.activePrompt;
+      debugScene.textContent = scene?.id || "unknown";
+      debugPrompt.textContent = active ? promptCallout(active) : "None";
+      debugInputs.textContent = active ? labelFor(active.requiredInput || active.choices?.[0]) : "None";
+      debugTime.textContent = `${(state.timeLeft / 1000).toFixed(2)}s`;
+    }
+
+    function promptCallout(prompt) {
+      if (prompt.requiredInput) return `${labelFor(prompt.requiredInput).toUpperCase()}!`;
+      if (prompt.callout) return prompt.callout;
+      if (prompt.correct) return `${labelFor(prompt.correct).toUpperCase()}!`;
+      return prompt.choices.map(choice => `${labelFor(choice).toUpperCase()}!`).join("   ");
+    }
+
+    function promptHelpText(prompt) {
+      const keys = prompt.choices.map(choice => {
+        if (choice === "jump") return "W/ArrowUp/Space";
+        if (choice === "run") return "W/ArrowUp";
+        if (choice === "sniff") return "F or Sniff";
+        if (choice === "bark") return "B or Bark";
+        return labelFor(choice);
+      });
+      return `${prompt.label}  Keyboard: ${keys.join(" / ")}. Tap the flashing button.`;
+    }
+
+    function labelFor(input) {
+      return {
+        left: "Left",
+        right: "Right",
+        sniff: "Sniff",
+        jump: "Jump",
+        bark: "Bark",
+        run: "Run"
+      }[input] || input;
+    }
+
+    function mapKeyboardInput(code) {
+      const choices = state.activePrompt?.choices || scenes[state.current]?.prompt?.choices || scenes[state.current]?.prompt?.pool || [];
+      const has = input => choices.includes(input);
+      const map = {
+        ArrowLeft: "left",
+        KeyA: "left",
+        ArrowRight: "right",
+        KeyD: "right",
+        KeyS: "sniff",
+        KeyB: "bark",
+        KeyR: "run",
+        Space: "jump",
+        Enter: "jump"
+      };
+      if (code === "ArrowUp" || code === "KeyW") {
+        if (has("run")) return "run";
+        if (has("jump")) return "jump";
+        return "jump";
+      }
+      return map[code];
+    }
+
+    document.getElementById("startButton").addEventListener("click", () => startGame());
+    document.getElementById("howToPlayButton").addEventListener("click", () => {
+      initArcadeAudio();
+      show(startScreen, false);
+      show(instructionsScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("instructionsCloseButton").addEventListener("click", () => {
+      show(instructionsScreen, false);
+      show(startScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("instructionsContinueButton").addEventListener("click", () => {
+      show(instructionsScreen, false);
+      show(startScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("settingsButton").addEventListener("click", () => {
+      initArcadeAudio();
+      show(startScreen, false);
+      show(settingsScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("settingsCloseButton").addEventListener("click", () => {
+      show(settingsScreen, false);
+      show(startScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("settingsContinueButton").addEventListener("click", () => {
+      show(settingsScreen, false);
+      show(startScreen, true);
+      playTitleTheme();
+    });
+    document.getElementById("settingsMuteButton").addEventListener("click", () => {
+      initArcadeAudio();
+      toggleMute();
+    });
+    document.getElementById("lowPowerButton").addEventListener("click", toggleLowPower);
+    document.getElementById("settingsVolumeSlider").addEventListener("input", event => {
+      state.volume = Number(event.target.value) / 100;
+      if (state.volume > 0) state.muted = false;
+      updateAudioControls();
+    });
+    difficultySelect.addEventListener("change", event => {
+      state.difficulty = event.target.value;
+      updateAudioControls();
+    });
+    startMuteButton.addEventListener("click", () => {
+      initArcadeAudio();
+      toggleMute();
+    });
+    document.getElementById("pauseButton").addEventListener("click", () => togglePause());
+    document.getElementById("resumeButton").addEventListener("click", () => togglePause(false));
+    document.getElementById("restartButton").addEventListener("click", () => startGame());
+    document.getElementById("restartFromPauseButton").addEventListener("click", () => startGame());
+    muteButton.addEventListener("click", toggleMute);
+    volumeSlider.addEventListener("input", () => {
+      state.volume = Number(volumeSlider.value) / 100;
+      if (state.volume > 0) state.muted = false;
+      updateAudioControls();
+    });
+    document.getElementById("backToTitleButton").addEventListener("click", () => {
+      state.gameState = "title";
+      clearGameplayTimers();
+      show(gameOverScreen, false);
+      show(startScreen, true);
+      show(instructionsScreen, false);
+      show(placeholder, false);
+      show(loadingOverlay, false);
+      gameplayLoop.pause();
+      playTitleVideo();
+      playTitleTheme();
+    });
+
+    startScreen.addEventListener("pointerdown", () => {
+      initArcadeAudio();
+      playTitleVideo();
+      playTitleTheme();
+    }, { once: true });
+
+    document.querySelectorAll("[data-input]").forEach(button => {
+      button.addEventListener("click", () => handleInput(button.dataset.input));
+    });
+    secretTrigger.addEventListener("click", triggerSecretQuest);
+
+    document.addEventListener("contextmenu", event => event.preventDefault());
+    document.addEventListener("touchmove", event => event.preventDefault(), { passive: false });
+
+    window.addEventListener("keydown", event => {
+      if (event.code === "Escape") togglePause();
+      if (event.code === "KeyH" && state.secretActive?.trigger === "heart") {
+        event.preventDefault();
+        triggerSecretQuest();
+        return;
+      }
+      const input = mapKeyboardInput(event.code);
+      if (input) {
+        event.preventDefault();
+        handleInput(input);
+      }
+    });
+
+    video.addEventListener("ended", () => {
+      if (state.gameState === "gameover") {
+        if ((video.currentSrc || video.src).includes(scenes.game_over.video)) showEndMenu(false);
+        return;
+      }
+      if (state.gameState === "victory") {
+        const currentSrc = video.currentSrc || video.src;
+        if (state.current === "goal_home" && currentSrc.includes(scenes.goal_home.video)) {
+          state.current = "victory_loop";
+          loadVideo(systemVideos.victoryLoop, "Victory Loop", "Chip celebrates at home as PawSafe Forest glows behind him.");
+          return;
+        }
+        if (state.current === "victory_loop" && currentSrc.includes(systemVideos.victoryLoop)) {
+          showEndMenu(true);
+          return;
+        }
+        return;
+      }
+      if (state.pendingBranchDone) {
+        finishPendingBranch(video.currentSrc || video.src);
+        return;
+      }
+      if (state.pendingSideQuest) {
+        finishCurrentSideQuestClip();
+        return;
+      }
+      const scene = scenes[state.current];
+      if (!scene || video.src.indexOf(scene.video) === -1) return;
+      if (state.arcadeMode && state.current === "intro") {
+        startStage(0);
+        return;
+      }
+      if (state.arcadeMode && state.currentStageStep && !scene.prompt) {
+        advanceStageFlow();
+        return;
+      }
+      if (!scene?.prompt && scene?.win) showEndMenu(true);
+      else if (!scene?.prompt && scene?.lose) showEndMenu(false);
+      else if (!scene?.prompt && scene?.next) playScene(scene.next);
+    });
+
+    video.addEventListener("playing", () => {
+      show(loadingOverlay, false);
+    });
+
+    video.addEventListener("canplay", () => {
+      show(loadingOverlay, false);
+    });
+
+    video.addEventListener("error", () => {
+      showMissingVideo(video.currentSrc || video.src);
+    });
+
+    if (new URLSearchParams(window.location.search).has("qteTest")) {
+      window.setTimeout(() => {
+        show(startScreen, false);
+        show(hud, true);
+        show(mobilePad, true);
+        state.current = "forest_path";
+        updateHud();
+        showPrompt(scenes.forest_path);
+      }, 250);
+    }
+
+    updateAudioControls();
+    updateHud();
+    playTitleVideo();
+  </script>
+</body>
+</html>
